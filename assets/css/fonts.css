@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'pixel-regular';
+    src: url('assets/fonts/slkscr.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'pixel-bold';
+    src: url('assets/fonts/slkscrb.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}

@@ -2,3 +2,12 @@
 @tailwind components;
 @tailwind utilities;
   
+/* assets/css/main.css */
+body, html {
+  cursor: url('@/assets/img/cursor.png'), auto;
+}
+
+/* Global pointer cursor */
+a, button, [role="button"], .pointer, select {
+  cursor: url('@/assets/img/cursor-pointer.png'), pointer;
+}

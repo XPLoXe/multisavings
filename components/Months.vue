@@ -1,5 +1,5 @@
 <template>
-    <div class="dropdown-container relative inline-block text-left">
+    <div class="dropdown-container pointer relative inline-block text-left">
         <div>
             <button @click="toggleDropdown"
                 class="inline-flex justify-center transition duration-300 ease-in-out w-full rounded-xl border-gray-300 shadow-sm px-4 py-2 bg-black font-medium hover:bg-white hover:text-black focus:outline-none">

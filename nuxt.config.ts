@@ -4,6 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   plugins: [
     '@/plugins/fontawesome.js',
+    '@/plugins/global-components.js',
+
   ],
   vite: {
     optimizeDeps: {

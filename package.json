@@ -15,6 +15,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "autoprefixer": "^10.4.19",
     "nuxt": "^3.12.4",
+    "pixelarticons": "^1.8.0",
     "postcss": "^8.4.40",
     "tailwindcss": "^3.4.7",
     "vue": "latest"

@@ -4,7 +4,7 @@
             <button @click="toggleDropdown"
                 class="inline-flex justify-center transition duration-300 ease-in-out w-full rounded-xl border-gray-300 shadow-sm px-4 py-2 bg-black font-medium hover:bg-white hover:text-black focus:outline-none">
                 {{ selectedOption }}
-                <ficon icon="chevron-down" class="-mr-1 ml-2 my-auto" />
+                <SvgIcon name="chevron-down" alt="chevron-down" class="ml-4" :isHoverable="true" />
             </button>
         </div>
 

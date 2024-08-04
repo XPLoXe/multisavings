@@ -1,5 +1,5 @@
 // firestoreMethods.js
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, Timestamp, query, orderBy } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Function to add a new month with empty accounts
@@ -8,6 +8,7 @@ async function addNewMonth(monthName) {
     const monthData = {
       month: monthName,
       accounts: [],
+      createdAt: Timestamp.now(),  // Add Firestore timestamp
     };
 
     const docRef = await addDoc(collection(db, 'months'), monthData);
@@ -21,13 +22,24 @@ async function addNewMonth(monthName) {
 
 export { addNewMonth };
 
+// Function to fetch all months from Firestore, ordered by the creation timestamp
 async function fetchMonths() {
   try {
-    const querySnapshot = await getDocs(collection(db, 'months'));
+    // Create a query to order by 'createdAt' in descending order
+    const monthsQuery = query(collection(db, 'months'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(monthsQuery);
+
     const months = [];
     querySnapshot.forEach((doc) => {
-      months.push(doc.data().month);
+      const data = doc.data();
+      months.push({
+        id: doc.id,
+        month: data.month,
+        accounts: data.accounts,
+        createdAt: data.createdAt.toDate(), // Convert Firestore timestamp to JS Date
+      });
     });
+
     return months;
   } catch (e) {
     console.error('Error fetching documents: ', e);

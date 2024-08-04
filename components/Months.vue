@@ -11,9 +11,9 @@
         <div v-if="open" class="absolute top-8 mt-2 w-56 rounded-xl border border-white shadow-lg bg-black">
             <div class="py-1 overflow-scroll max-h-64 overflow-x-hidden custom-scrollbar" role="menu"
                 aria-orientation="vertical" aria-labelledby="options-menu">
-                <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
-                    class="block px-4 py-2 transition duration-300 ease-in-out hover:bg-white hover:text-black w-full text-left">
-                    {{ option }}
+                <button v-for="(option, index) in options" :key="index" @click="selectOption(option.month)"
+                    class="block px-4 py-2 transition duration-300 ease-in-out hover:bg-white rounded-xl hover:text-black w-full text-left">
+                    {{ option.month }}
                 </button>
             </div>
         </div>
@@ -22,11 +22,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { fetchMonths } from '@/firestoreMethods'; // Import the fetchMonths function
+import { fetchMonths } from '@/firestoreMethods';
 
 const open = ref(false);
 const selectedOption = ref('Select Month');
-const options = ref<string[]>([]); // Change this to a ref for reactivity
+const options = ref<Month[]>([]);
 
 const dropdown = ref(null);
 
@@ -45,7 +45,6 @@ function handleClickOutside(event: MouseEvent) {
     }
 }
 
-// Fetch months from Firestore when the component is mounted
 onMounted(async () => {
     document.addEventListener('click', handleClickOutside);
 

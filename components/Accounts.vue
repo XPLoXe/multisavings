@@ -1,68 +1,134 @@
 <template>
     <div class="flex flex-col justify-center items-center space-y-8">
-        <Months />
-        <div class="flex flex-row space-x-12 justify-center items-center">
+        <Months @selected="fetchAccountsForMonth" />
+        <div class="items">
             <div class="item">
-                <div
-                    class="flex flex-row items-center space-x-4 hover:bg-white px-4 py-2 rounded-xl hover:text-black group">
+                <button class="btn items-center group account" @click="addAccount">
                     <h3 class="font-bold">Account</h3>
-                    <SvgIcon name="plus" alt="plus Icon" :width="24" :height="24"
+                    <SvgIcon name="plus" alt="Add Account" :width="20" :height="20"
                         class="font-bold group-hover:animate-spin-half" />
-                </div>
-                <div v-for="item in selectedMonth.accounts" :key="item.id">
-                    <div>{{ item.name }}</div>
+                </button>
+                <div v-for="item in selectedMonth?.accounts" :key="item.id" class="account-entry">
+                    <div class="flex flex-row items-center">
+                        <button class="btn items-center group delete" @click="deleteAccount(item.id)">
+                            <SvgIcon name="trash" alt="Delete Account" :width="20" :height="20"
+                                class="group-hover:animate-spin-once" />
+                        </button>
+                        <span>{{ item.name }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex flex-col justify-center items-center">
-                <h3 class="font-bold px-4 py-2">Balance</h3>
-                <div v-for="item in selectedMonth.accounts" :key="item.id">
-                    <div>$ {{ item.amount }}</div>
+            <div class="item">
+                <div class="px-4 py-2">
+                    <h3 class="font-bold">Balance</h3>
+                </div>
+                <div v-for="item in selectedMonth?.accounts" :key="item.id" class="balance-entry">
+                    <div class="flex flex-row justify-center items-center">
+                        <div class="flex space-x-4 flex-row px-4 py-2 justify-center items-center">
+                            <SvgIcon name="dollar" alt="Account Balance" :width="20" :height="20" />
+                        </div>
+                        <span>{{ item.amount }}</span>
+                        <button class="btn items-center group" @click="editAmount(item.id)">
+                            <SvgIcon name="edit" alt="Account Balance" :width="20" :height="20"
+                                class="group-hover:animate-spin-once" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 </template>
 
-<script setup lang='ts'>
-const data = {
-    "2023-01": {
-        month: "January",
-        year: 2023,
-        accounts: [
-            { id: "acc1", name: "Chase Saving Account", amount: 1000 },
-            { id: "acc2", name: "Chase Investing Account", amount: 5000 },
-            { id: "acc3", name: "Binance", amount: 3000 },
-            { id: "acc4", name: "BBVA", amount: 2000 },
-            { id: "acc5", name: "Trade Republic", amount: 1500 }
-        ]
-    },
-    "2023-02": {
-        month: "February",
-        year: 2023,
-        accounts: [
-            { id: "acc1", name: "Chase Saving Account", amount: 1200 },
-            { id: "acc2", name: "Chase Investing Account", amount: 5100 },
-            { id: "acc3", name: "Binance", amount: 3100 },
-            { id: "acc4", name: "BBVA", amount: 2100 },
-            { id: "acc5", name: "Trade Republic", amount: 1600 }
-        ]
-    },
-    // Add more months as needed
-};
 
-// make the data available to the template
+
+<script setup lang="ts">
 import { ref } from 'vue';
+import { fetchMonthById, addAccountToMonth, deleteAccountFromMonth } from '@/firestoreMethods';
 import Months from './Months.vue';
 
-const selectedMonth = ref(data["2023-01"]);
+const selectedMonth = ref<Month | null>(null);
 
+// Fetch accounts for the selected month from Firestore
+async function fetchAccountsForMonth(month: Month) {
+    console.log('Selected month:', month.id);
+    try {
+        const monthData = await fetchMonthById(month.id);
+        selectedMonth.value = monthData;
+    } catch (error) {
+        console.error('Error fetching month data:', error);
+    }
+}
+
+// Add a new account to the selected month
+async function addAccount() {
+    if (!selectedMonth.value) return;
+
+    const accountName = prompt('Enter the account name:');
+    const accountAmount = prompt('Enter the account amount:');
+
+    if (accountName && accountAmount) {
+        try {
+            const newAccount: Account = {
+                id: generateUniqueId(),
+                name: accountName,
+                amount: parseFloat(accountAmount),
+            };
+            await addAccountToMonth(selectedMonth.value.id, newAccount);
+            selectedMonth.value.accounts.push(newAccount);
+        } catch (error) {
+            console.error('Error adding new account:', error);
+        }
+    } else {
+        alert('Account name and amount are required.');
+    }
+}
+// Delete an account from the selected month
+async function deleteAccount(accountId: string) {
+    console.log('Deleting account:', accountId);
+    if (!selectedMonth.value) return;
+
+    try {
+        await deleteAccountFromMonth(selectedMonth.value.id, accountId);
+        // Remove the account from the local state
+        selectedMonth.value.accounts = selectedMonth.value.accounts.filter(
+            (account) => account.id !== accountId
+        );
+    } catch (error) {
+        console.error('Error deleting account:', error);
+    }
+}
+
+function editAmount(accountId: string) {
+    // to do
+}
+
+// Generate a unique ID for a new account
+function generateUniqueId(): string {
+    return '_' + Math.random().toString(36).substr(2, 9);
+}
 
 
 </script>
 
 <style scoped lang="pcss">
-.item {
-    @apply flex flex-col justify-center items-center;
+.items {
+  @apply flex flex-row space-x-12;
 }
+
+.item {
+  @apply flex flex-col space-y-4;
+}
+
+.account {
+  @apply w-40 min-w-40 items-center;
+}
+
+.account-entry, .balance-entry {
+  @apply py-2;
+}
+
+.account-entry span, .balance-entry span {
+  @apply text-lg;
+}
+
 </style>

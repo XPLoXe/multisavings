@@ -2,9 +2,10 @@
     <div ref="dropdown" class="dropdown-container pointer relative inline-block text-left">
         <div>
             <button @click="toggleDropdown"
-                class="inline-flex justify-center transition duration-300 ease-in-out w-full rounded-xl border-gray-300 shadow-sm px-4 py-2 bg-black font-medium hover:bg-white hover:text-black focus:outline-none">
+                class="btn group border-gray-300 shadow-sm bg-black font-medium focus:outline-none">
                 {{ selectedOption }}
-                <SvgIcon name="chevron-down" alt="chevron-down" class="ml-4" :isHoverable="true" />
+                <SvgIcon name="chevron-down" alt="chevron-down" class="ml-4 group-focus:animate-spin-half"
+                    :isHoverable="true" />
             </button>
         </div>
 
@@ -12,7 +13,7 @@
             <div class="py-1 overflow-scroll max-h-64 overflow-x-hidden custom-scrollbar" role="menu"
                 aria-orientation="vertical" aria-labelledby="options-menu">
                 <button v-for="(option, index) in options" :key="index" @click="selectOption(option.month)"
-                    class="block px-4 py-2 transition duration-300 ease-in-out hover:bg-white rounded-xl hover:text-black w-full text-left">
+                    class="btn items text-left">
                     {{ option.month }}
                 </button>
             </div>
@@ -93,5 +94,9 @@ onUnmounted(() => {
 .custom-scrollbar {
   scrollbar-width: thin; /* Makes the scrollbar thinner */
   scrollbar-color: white black; /* Thumb and track color */
+}
+
+.items {
+  @apply justify-start;
 }
 </style>

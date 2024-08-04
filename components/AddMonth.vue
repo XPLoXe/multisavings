@@ -1,9 +1,8 @@
 <template>
     <div>
-        <button @click="addMonth"
-            class="px-4 py-2 bg-black  rounded-xl flex flex-row items-center justify-center space-x-4 hover:bg-white hover:text-black">
+        <button @click="addMonth" class="btn group">
             <span>Add New Month</span>
-            <SvgIcon name="plus" alt="Coffee Icon" :width="24" :height="24" />
+            <SvgIcon name="plus" alt="Coffee Icon" :width="24" :height="24" class="group-hover:animate-spin-half" />
         </button>
     </div>
 </template>

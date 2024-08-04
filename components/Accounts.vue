@@ -3,13 +3,18 @@
         <Months />
         <div class="flex flex-row space-x-12 justify-center items-center">
             <div class="item">
-                <h3 class="font-bold">Account</h3>
+                <div
+                    class="flex flex-row items-center space-x-4 hover:bg-white px-4 py-2 rounded-xl hover:text-black group">
+                    <h3 class="font-bold">Account</h3>
+                    <SvgIcon name="plus" alt="plus Icon" :width="24" :height="24"
+                        class="font-bold group-hover:animate-spin-half" />
+                </div>
                 <div v-for="item in selectedMonth.accounts" :key="item.id">
                     <div>{{ item.name }}</div>
                 </div>
             </div>
             <div class="flex flex-col justify-center items-center">
-                <h3 class="font-bold">Balance</h3>
+                <h3 class="font-bold px-4 py-2">Balance</h3>
                 <div v-for="item in selectedMonth.accounts" :key="item.id">
                     <div>$ {{ item.amount }}</div>
                 </div>

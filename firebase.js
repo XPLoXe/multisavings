@@ -1,26 +1,27 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
+// firebase.js
+import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyA2XNaV-FhbVhykg_isq6Z7WwzBHRvVY_E",
-  authDomain: "saving-project-cbd1e.firebaseapp.com",
-  projectId: "saving-project-cbd1e",
-  storageBucket: "saving-project-cbd1e.appspot.com",
-  messagingSenderId: "37770475569",
-  appId: "1:37770475569:web:d6db68adf772562e63bd10",
-  measurementId: "G-ZT1Z2L19WX"
-};
+// Function to initialize Firebase
+export function initializeFirebase() {
+  if (typeof window !== 'undefined') {  // Ensure this runs only in the browser
+    // eslint-disable-next-line no-undef
+    const config = useRuntimeConfig();
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
+    const firebaseConfig = {
+      apiKey: config.public.firebaseApiKey,
+      authDomain: config.public.firebaseAuthDomain,
+      projectId: config.public.firebaseProjectId,
+      storageBucket: config.public.firebaseStorageBucket,
+      messagingSenderId: config.public.firebaseMessagingSenderId,
+      appId: config.public.firebaseAppId,
+      measurementId: config.public.firebaseMeasurementId,
+    };
 
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    return getFirestore(app);
+  }
+  return null;
+}
 
-export { db };
+export const db = initializeFirebase();

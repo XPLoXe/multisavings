@@ -9,11 +9,12 @@
             </button>
         </div>
 
-        <div v-if="open" class="absolute top-8 mt-2 w-56 rounded-xl border border-white shadow-lg bg-black">
+        <div v-if="open && options.length > 0"
+            class="absolute top-8 mt-2 w-56 rounded-xl border border-white shadow-lg bg-black">
             <div class="py-1 overflow-scroll max-h-64 overflow-x-hidden custom-scrollbar" role="menu"
                 aria-orientation="vertical" aria-labelledby="options-menu">
-                <button v-for="(option, index) in options" :key="index" @click="selectOption(option.month)"
-                    class="btn items text-left">
+                <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
+                    class="btn w-full items text-left">
                     {{ option.month }}
                 </button>
             </div>
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
 import { fetchMonths } from '@/firestoreMethods';
 
 const open = ref(false);
@@ -31,13 +32,16 @@ const options = ref<Month[]>([]);
 
 const dropdown = ref(null);
 
+const emit = defineEmits(['selected']);
+
 function toggleDropdown() {
     open.value = !open.value;
 }
 
-function selectOption(option: string) {
-    selectedOption.value = option;
+function selectOption(option: Month) {
+    selectedOption.value = option.month;
     open.value = false;
+    emit('selected', option);
 }
 
 function handleClickOutside(event: MouseEvent) {

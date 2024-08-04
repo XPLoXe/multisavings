@@ -13,5 +13,5 @@ a, button, [role="button"], .pointer, select {
 }
 
 .btn {
- @apply w-full flex space-x-4 flex-row px-4 py-2 justify-center hover:bg-white rounded-xl hover:text-black
+ @apply flex space-x-4 flex-row px-4 py-2 justify-center hover:bg-white rounded-xl hover:text-black
 }

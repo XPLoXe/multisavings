@@ -2,7 +2,7 @@
 declare global {
   interface Account {
     id: string;
-    account: string;
+    name: string;
     amount: number;
   }
 

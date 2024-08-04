@@ -9,7 +9,7 @@
         </div>
 
         <div v-if="open" class="absolute top-8 mt-2 w-56 rounded-xl border border-white shadow-lg bg-black">
-            <div class="py-1 overflow-scroll h-64 overflow-x-hidden custom-scrollbar" role="menu"
+            <div class="py-1 overflow-scroll max-h-64 overflow-x-hidden custom-scrollbar" role="menu"
                 aria-orientation="vertical" aria-labelledby="options-menu">
                 <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
                     class="block px-4 py-2 transition duration-300 ease-in-out hover:bg-white hover:text-black w-full text-left">
@@ -22,14 +22,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { fetchMonths } from '@/firestoreMethods'; // Import the fetchMonths function
 
 const open = ref(false);
 const selectedOption = ref('Select Month');
-const options = [
-    'January', 'February', 'March', 'April', 'May',
-    'June', 'July', 'August', 'September', 'October',
-    'November', 'December'
-];
+const options = ref<string[]>([]); // Change this to a ref for reactivity
 
 const dropdown = ref(null);
 
@@ -48,14 +45,27 @@ function handleClickOutside(event: MouseEvent) {
     }
 }
 
-onMounted(() => {
+// Fetch months from Firestore when the component is mounted
+onMounted(async () => {
     document.addEventListener('click', handleClickOutside);
+
+    try {
+        const fetchedMonths = await fetchMonths();
+        options.value = fetchedMonths.length > 0 ? fetchedMonths : [
+            'January', 'February', 'March', 'April', 'May',
+            'June', 'July', 'August', 'September', 'October',
+            'November', 'December'
+        ]; // Default options if none are fetched
+    } catch (error) {
+        console.error('Error loading months:', error);
+    }
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
 });
 </script>
+
 
 <style lang="pcss">
 .dropdown-container {

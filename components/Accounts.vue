@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col justify-center items-center space-y-8">
         <Months />
-        <div class="flex flex-row space-x-12 justify-center items-center pb-4">
+        <div class="flex flex-row space-x-12 justify-center items-center">
             <div class="item">
                 <h3 class="font-bold">Account</h3>
                 <div v-for="item in selectedMonth.accounts" :key="item.id">

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col justify-center items-center space-y-8">
+    <div class="flex flex-col justify-center items-center space-y-6">
         <Months @selected="fetchAccountsForMonth" />
         <div class="items">
             <div class="item">
@@ -134,7 +134,7 @@ function generateUniqueId(): string {
 }
 
 .item {
-  @apply flex flex-col space-y-4;
+  @apply flex flex-col space-y-2;
 }
 
 .account {

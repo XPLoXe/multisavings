@@ -117,4 +117,30 @@ async function deleteAccountFromMonth(monthId, accountId) {
   }
 }
 
-export { addNewMonth, fetchMonths, fetchMonthById, addAccountToMonth, deleteAccountFromMonth };
+async function updateAccountAmount(monthId, accountId, newAmount) {
+  try {
+    const monthRef = doc(db, 'months', monthId);
+    const monthSnap = await getDoc(monthRef);
+
+    if (!monthSnap.exists()) {
+      throw new Error('Month not found');
+    }
+
+    const monthData = monthSnap.data();
+    const updatedAccounts = monthData.accounts.map((account) => {
+      if (account.id === accountId) {
+        return { ...account, amount: newAmount };
+      }
+      return account;
+    });
+
+    await updateDoc(monthRef, {
+      accounts: updatedAccounts,
+    });
+  } catch (e) {
+    console.error('Error updating account amount:', e);
+    throw new Error('Failed to update account amount');
+  }
+}
+
+export { addNewMonth, fetchMonths, fetchMonthById, addAccountToMonth, deleteAccountFromMonth, updateAccountAmount };

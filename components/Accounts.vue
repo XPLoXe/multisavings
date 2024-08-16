@@ -1,39 +1,46 @@
 <template>
-    <div class="flex flex-col justify-center items-center space-y-6">
+    <div class="flex flex-col justify-center items-center space-y-6 min-w-[500px]">
         <Periods @selected="fetchAccountsForPeriod" />
-        <div class="items">
-            <div class="item">
-                <button class="btn items-center group account" @click="addAccount">
+
+        <div class="grid grid-cols-2 gap-8 w-full">
+            <!-- Account Column -->
+            <div class="w-full">
+                <button class="btn group w-full flex justify-between items-center" @click="addAccount">
                     <h3 class="font-bold">Account</h3>
                     <SvgIcon name="plus" alt="Add Account" :width="20" :height="20"
-                        class="font-bold group-hover:animate-spin-half" />
+                        class="group-hover:animate-spin-half" />
                 </button>
-                <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="account-entry">
-                    <div class="flex flex-row items-center">
-                        <button class="btn items-center group delete" @click="deleteAccount(item.id)">
-                            <SvgIcon name="trash" alt="Delete Account" :width="20" :height="20"
-                                class="group-hover:animate-spin-once" />
-                        </button>
-                        <span>{{ item.name }}</span>
-                    </div>
+
+                <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="flex items-center py-2">
+                    <button class="btn group flex-shrink-0" @click="deleteAccount(item.id)">
+                        <SvgIcon name="trash" alt="Delete Account" :width="20" :height="20"
+                            class="group-hover:animate-spin-once" />
+                    </button>
+                    <span class="ml-2 text-lg">{{ item.name }}</span>
                 </div>
             </div>
-            <div class="item">
-                <div class="px-4 py-2">
+
+            <!-- Balance Column -->
+            <div>
+                <button class="btn group w-full flex justify-between items-center" @click="handleBalanceChange">
                     <h3 class="font-bold">Balance</h3>
-                </div>
-                <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="balance-entry">
-                    <div class="flex flex-row justify-center items-center">
-                        <div class="flex space-x-4 flex-row px-4 py-2 justify-center items-center">
+                    <SvgIcon :name="balanceIcon" alt="See Percentage" :width="20" :height="20"
+                        class="group-hover:animate-spin-half" />
+                </button>
+
+                <transition-group name="fade" tag="div">
+                    <div v-for="item in selectedPeriod?.accounts" :key="item.id"
+                        class="flex justify-center items-center py-2">
+                        <div class="flex items-center space-x-2">
                             <SvgIcon name="dollar" alt="Account Balance" :width="20" :height="20" />
+                            <span class="text-lg">{{ item.amount }}</span>
                         </div>
-                        <span>{{ item.amount }}</span>
-                        <button class="btn items-center group" @click="editAmount(item.id)">
-                            <SvgIcon name="edit" alt="Account Balance" :width="20" :height="20"
+                        <button class="btn group flex-shrink-0" @click="editAmount(item.id)">
+                            <SvgIcon name="edit" alt="Edit Balance" :width="20" :height="20"
                                 class="group-hover:animate-spin-once" />
                         </button>
                     </div>
-                </div>
+                </transition-group>
             </div>
         </div>
     </div>
@@ -66,6 +73,10 @@ async function addAccount() {
     const accountAmount = prompt('Enter the account amount:');
 
     if (accountName && accountAmount) {
+        if (accountName.length > 15 || accountAmount.length > 15) {
+            alert("Name and Amount cannot be longer than 15 characters.");
+            return;
+        }
         try {
             const newAccount: Account = {
                 id: generateUniqueId(),
@@ -94,6 +105,13 @@ async function deleteAccount(accountId: string) {
     } catch (error) {
         console.error('Error deleting account:', error);
     }
+}
+
+// Handle the balance change icon
+const balanceIcon = ref('dollar');
+function handleBalanceChange() {
+    balanceIcon.value = balanceIcon.value === 'percent' ? 'dollar' : 'percent';
+    // TO Do: Implement the balance change logic
 }
 
 // Edit the amount of an existing account
@@ -127,24 +145,16 @@ function generateUniqueId(): string {
 </script>
 
 <style scoped lang="pcss">
-.items {
-  @apply flex flex-row space-x-12;
+.grid {
+  @apply grid-cols-2 gap-8;
 }
 
-.item {
-  @apply flex flex-col space-y-2;
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.account {
-  @apply w-40 min-w-40 items-center;
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
-
-.account-entry, .balance-entry {
-  @apply py-2;
-}
-
-.account-entry span, .balance-entry span {
-  @apply text-lg;
-}
-
 </style>

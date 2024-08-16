@@ -15,7 +15,7 @@
                 aria-orientation="vertical" aria-labelledby="options-menu">
                 <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
                     class="btn w-full items text-left">
-                    {{ option.month }}
+                    {{ option.period }}
                 </button>
             </div>
         </div>
@@ -24,13 +24,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
-import { fetchMonths } from '@/firestoreMethods';
+import { fetchPeriods } from '@/firestoreMethods';
 import { auth } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const open = ref(false);
-const selectedOption = ref('Select Month');
-const options = ref<Month[]>([]);
+const selectedOption = ref('Select Period');
+const options = ref<Period[]>([]);
 
 const dropdown = ref(null);
 
@@ -40,8 +40,8 @@ function toggleDropdown() {
     open.value = !open.value;
 }
 
-function selectOption(option: Month) {
-    selectedOption.value = option.month;
+function selectOption(option: Period) {
+    selectedOption.value = option.period;
     open.value = false;
     emit('selected', option);
 }
@@ -52,16 +52,16 @@ function handleClickOutside(event: MouseEvent) {
     }
 }
 
-async function loadMonths() {
+async function loadPeriods() {
     try {
-        const fetchedMonths = await fetchMonths();
-        options.value = fetchedMonths.length > 0 ? fetchedMonths : [
+        const fetchedPeriods = await fetchPeriods();
+        options.value = fetchedPeriods.length > 0 ? fetchedPeriods : [
             'January', 'February', 'March', 'April', 'May',
             'June', 'July', 'August', 'September', 'October',
             'November', 'December'
         ]; // Default options if none are fetched
     } catch (error) {
-        console.error('Error loading months:', error);
+        console.error('Error loading periods:', error);
     }
 }
 
@@ -71,8 +71,8 @@ onMounted(() => {
     // Listen for authentication state changes
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // User is authenticated, now load the months
-            loadMonths();
+            // User is authenticated, now load the periods
+            loadPeriods();
         } else {
             console.error('User is not authenticated');
         }

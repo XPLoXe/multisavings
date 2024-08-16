@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col justify-center items-center space-y-8">
+    <div class="flex flex-col justify-center items-center space-y-6">
         <Months @selected="fetchAccountsForMonth" />
         <div class="items">
             <div class="item">
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { fetchMonthById, addAccountToMonth, deleteAccountFromMonth } from '@/firestoreMethods';
+import { fetchMonthById, addAccountToMonth, deleteAccountFromMonth, updateAccountAmount } from '@/firestoreMethods';
 import Months from './Months.vue';
 
 const selectedMonth = ref<Month | null>(null);
@@ -98,8 +98,26 @@ async function deleteAccount(accountId: string) {
     }
 }
 
-function editAmount(accountId: string) {
-    // to do
+// Edit the amount of an existing account
+async function editAmount(accountId: string) {
+    if (!selectedMonth.value) return;
+
+    const newAmount = prompt('Enter the new amount:');
+    if (newAmount) {
+        try {
+            const parsedAmount = parseFloat(newAmount);
+            await updateAccountAmount(selectedMonth.value.id, accountId, parsedAmount);
+            // Update the local state with the new amount
+            const accountToEdit = selectedMonth.value.accounts.find(account => account.id === accountId);
+            if (accountToEdit) {
+                accountToEdit.amount = parsedAmount;
+            }
+        } catch (error) {
+            console.error('Error updating account amount:', error);
+        }
+    } else {
+        alert('Amount is required.');
+    }
 }
 
 // Generate a unique ID for a new account
@@ -116,7 +134,7 @@ function generateUniqueId(): string {
 }
 
 .item {
-  @apply flex flex-col space-y-4;
+  @apply flex flex-col space-y-2;
 }
 
 .account {

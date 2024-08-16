@@ -1,4 +1,3 @@
-// firestoreMethods.js
 import {
   collection,
   addDoc,
@@ -11,16 +10,28 @@ import {
   orderBy,
   arrayUnion,
   arrayRemove,
+  where,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';  // Ensure auth is correctly imported
+
+// Helper function to get the current user
+function getCurrentUser() {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  return user;
+}
 
 // Function to add a new month with empty accounts
 async function addNewMonth(monthName) {
   try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
     const monthData = {
       month: monthName,
       accounts: [],
-      createdAt: Timestamp.now(), // Add Firestore timestamp
+      createdAt: Timestamp.now(),  // Add Firestore timestamp
+      userId: user.uid,  // Associate data with the authenticated user
     };
 
     const docRef = await addDoc(collection(db, 'months'), monthData);
@@ -35,8 +46,13 @@ async function addNewMonth(monthName) {
 // Function to fetch all months from Firestore, ordered by the creation timestamp
 async function fetchMonths() {
   try {
-    // Create a query to order by 'createdAt' in descending order
-    const monthsQuery = query(collection(db, 'months'), orderBy('createdAt', 'desc'));
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const monthsQuery = query(
+      collection(db, 'months'),
+      where('userId', '==', user.uid),  // Fetch only data for the current user
+      orderBy('createdAt', 'desc')
+    );
     const querySnapshot = await getDocs(monthsQuery);
 
     const months = [];
@@ -46,7 +62,7 @@ async function fetchMonths() {
         id: doc.id,
         month: data.month,
         accounts: data.accounts,
-        createdAt: data.createdAt.toDate(), // Convert Firestore timestamp to JS Date
+        createdAt: data.createdAt.toDate(),
       });
     });
 
@@ -60,7 +76,9 @@ async function fetchMonths() {
 // Function to fetch month data by ID
 async function fetchMonthById(monthId) {
   try {
-    const monthRef = doc(collection(db, 'months'), monthId);
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const monthRef = doc(db, 'months', monthId);
     const monthSnap = await getDoc(monthRef);
 
     if (!monthSnap.exists()) {
@@ -68,6 +86,10 @@ async function fetchMonthById(monthId) {
     }
 
     const monthData = monthSnap.data();
+    if (monthData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this month data');
+    }
+
     return {
       id: monthSnap.id,
       month: monthData.month,
@@ -83,9 +105,22 @@ async function fetchMonthById(monthId) {
 // Function to add an account to a specific month in Firestore
 async function addAccountToMonth(monthId, account) {
   try {
-    const monthRef = doc(collection(db, 'months'), monthId);
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const monthRef = doc(db, 'months', monthId);
+    const monthSnap = await getDoc(monthRef);
+
+    if (!monthSnap.exists()) {
+      throw new Error('Month not found');
+    }
+
+    const monthData = monthSnap.data();
+    if (monthData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this month data');
+    }
+
     await updateDoc(monthRef, {
-      accounts: arrayUnion(account), // Use arrayUnion to add the account to the array
+      accounts: arrayUnion(account),  // Use arrayUnion to add the account to the array
     });
   } catch (e) {
     console.error('Error adding account to month:', e);
@@ -96,6 +131,8 @@ async function addAccountToMonth(monthId, account) {
 // Function to delete an account from a specific month in Firestore
 async function deleteAccountFromMonth(monthId, accountId) {
   try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
     const monthRef = doc(db, 'months', monthId);
     const monthSnap = await getDoc(monthRef);
 
@@ -104,11 +141,15 @@ async function deleteAccountFromMonth(monthId, accountId) {
     }
 
     const monthData = monthSnap.data();
+    if (monthData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this month data');
+    }
+
     const accountToDelete = monthData.accounts.find(acc => acc.id === accountId);
 
     if (accountToDelete) {
       await updateDoc(monthRef, {
-        accounts: arrayRemove(accountToDelete), // Use arrayRemove to delete the account
+        accounts: arrayRemove(accountToDelete),  // Use arrayRemove to delete the account
       });
     }
   } catch (e) {
@@ -117,4 +158,37 @@ async function deleteAccountFromMonth(monthId, accountId) {
   }
 }
 
-export { addNewMonth, fetchMonths, fetchMonthById, addAccountToMonth, deleteAccountFromMonth };
+// Function to update the amount of a specific account in a specific month
+async function updateAccountAmount(monthId, accountId, newAmount) {
+  try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const monthRef = doc(db, 'months', monthId);
+    const monthSnap = await getDoc(monthRef);
+
+    if (!monthSnap.exists()) {
+      throw new Error('Month not found');
+    }
+
+    const monthData = monthSnap.data();
+    if (monthData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this month data');
+    }
+
+    const updatedAccounts = monthData.accounts.map((account) => {
+      if (account.id === accountId) {
+        return { ...account, amount: newAmount };
+      }
+      return account;
+    });
+
+    await updateDoc(monthRef, {
+      accounts: updatedAccounts,
+    });
+  } catch (e) {
+    console.error('Error updating account amount:', e);
+    throw new Error('Failed to update account amount');
+  }
+}
+
+export { addNewMonth, fetchMonths, fetchMonthById, addAccountToMonth, deleteAccountFromMonth, updateAccountAmount };

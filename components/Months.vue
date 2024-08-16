@@ -25,6 +25,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
 import { fetchMonths } from '@/firestoreMethods';
+import { auth } from '@/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const open = ref(false);
 const selectedOption = ref('Select Month');
@@ -50,9 +52,7 @@ function handleClickOutside(event: MouseEvent) {
     }
 }
 
-onMounted(async () => {
-    document.addEventListener('click', handleClickOutside);
-
+async function loadMonths() {
     try {
         const fetchedMonths = await fetchMonths();
         options.value = fetchedMonths.length > 0 ? fetchedMonths : [
@@ -63,6 +63,20 @@ onMounted(async () => {
     } catch (error) {
         console.error('Error loading months:', error);
     }
+}
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+
+    // Listen for authentication state changes
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User is authenticated, now load the months
+            loadMonths();
+        } else {
+            console.error('User is not authenticated');
+        }
+    });
 });
 
 onUnmounted(() => {

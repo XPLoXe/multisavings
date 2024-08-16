@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col justify-center items-center space-y-6">
-        <Months @selected="fetchAccountsForMonth" />
+        <Periods @selected="fetchAccountsForPeriod" />
         <div class="items">
             <div class="item">
                 <button class="btn items-center group account" @click="addAccount">
@@ -8,7 +8,7 @@
                     <SvgIcon name="plus" alt="Add Account" :width="20" :height="20"
                         class="font-bold group-hover:animate-spin-half" />
                 </button>
-                <div v-for="item in selectedMonth?.accounts" :key="item.id" class="account-entry">
+                <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="account-entry">
                     <div class="flex flex-row items-center">
                         <button class="btn items-center group delete" @click="deleteAccount(item.id)">
                             <SvgIcon name="trash" alt="Delete Account" :width="20" :height="20"
@@ -22,7 +22,7 @@
                 <div class="px-4 py-2">
                     <h3 class="font-bold">Balance</h3>
                 </div>
-                <div v-for="item in selectedMonth?.accounts" :key="item.id" class="balance-entry">
+                <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="balance-entry">
                     <div class="flex flex-row justify-center items-center">
                         <div class="flex space-x-4 flex-row px-4 py-2 justify-center items-center">
                             <SvgIcon name="dollar" alt="Account Balance" :width="20" :height="20" />
@@ -43,25 +43,24 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { fetchMonthById, addAccountToMonth, deleteAccountFromMonth, updateAccountAmount } from '@/firestoreMethods';
-import Months from './Months.vue';
+import { fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount } from '@/firestoreMethods';
+import Periods from './Periods.vue';
 
-const selectedMonth = ref<Month | null>(null);
+const selectedPeriod = ref<Period | null>(null);
 
-// Fetch accounts for the selected month from Firestore
-async function fetchAccountsForMonth(month: Month) {
-    console.log('Selected month:', month.id);
+// Fetch accounts for the selected period from Firestore
+async function fetchAccountsForPeriod(period: Period) {
     try {
-        const monthData = await fetchMonthById(month.id);
-        selectedMonth.value = monthData;
+        const periodData = await fetchPeriodById(period.id);
+        selectedPeriod.value = periodData;
     } catch (error) {
-        console.error('Error fetching month data:', error);
+        console.error('Error fetching period data:', error);
     }
 }
 
-// Add a new account to the selected month
+// Add a new account to the selected period
 async function addAccount() {
-    if (!selectedMonth.value) return;
+    if (!selectedPeriod.value) return;
 
     const accountName = prompt('Enter the account name:');
     const accountAmount = prompt('Enter the account amount:');
@@ -73,8 +72,8 @@ async function addAccount() {
                 name: accountName,
                 amount: parseFloat(accountAmount),
             };
-            await addAccountToMonth(selectedMonth.value.id, newAccount);
-            selectedMonth.value.accounts.push(newAccount);
+            await addAccountToPeriod(selectedPeriod.value.id, newAccount);
+            selectedPeriod.value.accounts.push(newAccount);
         } catch (error) {
             console.error('Error adding new account:', error);
         }
@@ -82,15 +81,14 @@ async function addAccount() {
         alert('Account name and amount are required.');
     }
 }
-// Delete an account from the selected month
+// Delete an account from the selected period
 async function deleteAccount(accountId: string) {
-    console.log('Deleting account:', accountId);
-    if (!selectedMonth.value) return;
+    if (!selectedPeriod.value) return;
 
     try {
-        await deleteAccountFromMonth(selectedMonth.value.id, accountId);
+        await deleteAccountFromPeriod(selectedPeriod.value.id, accountId);
         // Remove the account from the local state
-        selectedMonth.value.accounts = selectedMonth.value.accounts.filter(
+        selectedPeriod.value.accounts = selectedPeriod.value.accounts.filter(
             (account) => account.id !== accountId
         );
     } catch (error) {
@@ -100,15 +98,15 @@ async function deleteAccount(accountId: string) {
 
 // Edit the amount of an existing account
 async function editAmount(accountId: string) {
-    if (!selectedMonth.value) return;
+    if (!selectedPeriod.value) return;
 
     const newAmount = prompt('Enter the new amount:');
     if (newAmount) {
         try {
             const parsedAmount = parseFloat(newAmount);
-            await updateAccountAmount(selectedMonth.value.id, accountId, parsedAmount);
+            await updateAccountAmount(selectedPeriod.value.id, accountId, parsedAmount);
             // Update the local state with the new amount
-            const accountToEdit = selectedMonth.value.accounts.find(account => account.id === accountId);
+            const accountToEdit = selectedPeriod.value.accounts.find(account => account.id === accountId);
             if (accountToEdit) {
                 accountToEdit.amount = parsedAmount;
             }

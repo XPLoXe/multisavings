@@ -12,14 +12,14 @@
     </div>
     <div v-if="user" class="flex flex-col justify-center items-center space-y-4">
       <Accounts />
-      <AddMonth />
+      <AddPeriod />
     </div>
   </div>
 </template>
 
 <script setup lang='ts'>
 import Accounts from '~/components/Accounts.vue';
-import AddMonth from '@/components/AddMonth.vue';
+import AddPeriod from '~/components/AddPeriod.vue';
 import Login from '~/components/Login.vue';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';

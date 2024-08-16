@@ -6,9 +6,9 @@ declare global {
     amount: number;
   }
 
-  interface Month {
+  interface Period {
     id: string;
-    month: string;
+    period: string;
     accounts: Account[];
     createdAt: Date;
   }

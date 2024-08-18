@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   getDoc,
+  deleteDoc,
   updateDoc,
   doc,
   Timestamp,
@@ -190,4 +191,29 @@ async function updateAccountAmount(periodId, accountId, newAmount) {
   }
 }
 
-export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount };
+// Function to delete a period by ID
+async function deletePeriodById(periodId) {
+  try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const periodRef = doc(db, 'periods', periodId);
+    const periodSnap = await getDoc(periodRef);
+
+    if (!periodSnap.exists()) {
+      throw new Error('Period not found');
+    }
+
+    const periodData = periodSnap.data();
+    if (periodData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this period');
+    }
+
+    await deleteDoc(periodRef);  // Delete the period document from Firestore
+    console.log(`Period with ID ${periodId} has been deleted`);
+  } catch (e) {
+    console.error('Error deleting period:', e);
+    throw new Error('Failed to delete period');
+  }
+}
+
+export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById };

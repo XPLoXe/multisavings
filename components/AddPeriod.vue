@@ -1,6 +1,6 @@
 <template>
     <div>
-        <button @click="addPeriod" class="btn group">
+        <button @click="addPeriod" class="btn group items-center">
             <span>Add New Period</span>
             <SvgIcon name="plus" alt="Coffee Icon" :width="24" :height="24" class="group-hover:animate-spin-half" />
         </button>

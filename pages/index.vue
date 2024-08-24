@@ -5,7 +5,7 @@
       <Login />
     </div>
     <div class="flex flex-col justify-center items-center">
-      <h1 class="text-3xl pt-6 text-white">Saving Project
+      <h1 class="text-3xl pt-6 text-white mt-10">Saving Project
         <SvgIcon name="coffee-alt" alt="Coffee Icon" :width="36" :height="36" class="pt-2" />
       </h1>
       <h3 class="text-white pt-6">Manage your savings across multiple accounts</h3>

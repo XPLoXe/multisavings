@@ -8,10 +8,10 @@
       <h1 class="text-3xl pt-6 text-white mt-10">Saving Project
         <SvgIcon name="coffee-alt" alt="Coffee Icon" :width="36" :height="36" class="pt-2" />
       </h1>
-      <h3 class="text-white pt-6">Manage your savings across multiple accounts</h3>
-      <h4 class="text-white text-sm">Select a period from the dropdown bellow</h4>
+      <h3 class="text-white text-xl pt-6">Manage your savings across multiple accounts</h3>
+      <h4 class="text-white text-lg">Select a period from the dropdown bellow</h4>
     </div>
-    <div v-if="user" class="flex flex-col justify-center items-center space-y-4">
+    <div v-if="user" class="flex flex-col justify-center items-center space-y-4 text-xl ">
       <Accounts />
     </div>
   </div>

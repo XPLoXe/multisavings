@@ -5,7 +5,7 @@
                 class="btn group border-gray-300 shadow-sm bg-black font-medium focus:outline-none">
                 {{ selectedOption }}
                 <SvgIcon name="chevron-down" alt="chevron-down" class="ml-4 group-focus:animate-spin-half"
-                    :isHoverable="true" />
+                    :isHoverable="true" :width="28" :height="28" />
             </button>
         </div>
 
@@ -110,7 +110,7 @@ onUnmounted(() => {
 
 <style lang="pcss">
 .dropdown-container {
-  @apply flex flex-row justify-center items-center;
+  @apply flex flex-row justify-center items-center z-20;
 }
 
 /* Custom pixel art scrollbar styles */

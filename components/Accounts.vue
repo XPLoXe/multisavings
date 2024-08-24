@@ -1,8 +1,8 @@
 <template>
-    <div class="flex flex-col justify-center items-center space-y-6 min-w-[500px]">
+    <div class="flex flex-col justify-center items-center space-y-6 md:min-w-[500px]">
         <Periods @selected="fetchAccountsForPeriod" :periodDeleted="periodDeleted" />
 
-        <div class="scrollable-container custom-scrollbar grid grid-cols-2 gap-8 w-full">
+        <div class="scrollable-container custom-scrollbar grid grid-cols-2 md:gap-8 w-full">
             <!-- Account Column -->
             <div class="w-full">
                 <button class="btn group w-full flex justify-between items-center bg-black sticky-header"
@@ -17,7 +17,9 @@
                         <SvgIcon name="trash" alt="Delete Account" :width="24" :height="24"
                             class="group-hover:animate-spin-once" />
                     </button>
-                    <span class="ml-2 text-xl">{{ item.name }}</span>
+                    <span class="ml-2 md:text-xl block whitespace-nowrap overflow-hidden text-ellipsis">
+                        {{ item.name }}
+                    </span>
                 </div>
             </div>
 
@@ -35,7 +37,7 @@
                         class="flex justify-center items-center py-2">
                         <div class="flex items-center space-x-2">
                             <SvgIcon name="dollar" alt="Account Balance" :width="24" :height="24" />
-                            <span class="text-xl">{{ item.amount }}</span>
+                            <span class="md:text-xl">{{ item.amount }}</span>
                         </div>
                         <button class="btn group flex-shrink-0" @click="editAmount(item.id)">
                             <SvgIcon name="edit" alt="Edit Balance" :width="24" :height="24"
@@ -48,7 +50,7 @@
         <div class="flex flex-row pb-10">
             <AddPeriod />
             <!-- delete period -->
-            <button class="btn group" @click="deletePeriod">
+            <button class="btn group items-center" @click="deletePeriod">
                 <span>Delete Period</span>
                 <SvgIcon name="trash" alt="Delete Period" :width="24" :height="24"
                     class="group-hover:animate-spin-half" />
@@ -178,7 +180,7 @@ function generateUniqueId(): string {
 
 <style scoped lang="pcss">
 .grid {
-  @apply grid-cols-2 gap-8;
+  @apply grid-cols-2;
 }
 
 /* Sticky header styles */
@@ -187,7 +189,7 @@ function generateUniqueId(): string {
 }
 
 .scrollable-container {
-  @apply max-h-72 overflow-y-auto mt-4; /* Set max height and enable scrolling */
+  @apply max-h-80 overflow-y-auto mt-4; /* Set max height and enable scrolling */
 }
 
 /* Custom pixel art scrollbar styles */

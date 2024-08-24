@@ -12,6 +12,7 @@ import {
   arrayUnion,
   arrayRemove,
   where,
+  limit,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';  // Ensure auth is correctly imported
 
@@ -24,13 +25,32 @@ function getCurrentUser() {
   return user;
 }
 
-// Function to add a new period with empty accounts
 async function addNewPeriod(periodName) {
   try {
-    const user = getCurrentUser();  // Ensure the user is authenticated
+    const user = getCurrentUser(); // Ensure the user is authenticated
+
+    // Fetch the most recent period for the user
+    const periodsQuery = query(
+      collection(db, 'periods'),
+      where('userId', '==', user.uid),  // Only fetch periods for the current user
+      orderBy('createdAt', 'desc'),
+      limit(1)  // We only need the most recent one
+    );
+
+    const querySnapshot = await getDocs(periodsQuery);
+    let previousPeriodData = {
+      accounts: []
+    };
+
+    if (!querySnapshot.empty) {
+      const previousPeriodDoc = querySnapshot.docs[0];
+      previousPeriodData = previousPeriodDoc.data();
+    }
+
+    // Prepare the new period data by copying the accounts from the previous period
     const periodData = {
       period: periodName,
-      accounts: [],
+      accounts: previousPeriodData.accounts,  // Copy accounts from the most recent period
       createdAt: Timestamp.now(),  // Add Firestore timestamp
       userId: user.uid,  // Associate data with the authenticated user
     };

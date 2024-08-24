@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   getDoc,
+  deleteDoc,
   updateDoc,
   doc,
   Timestamp,
@@ -11,6 +12,7 @@ import {
   arrayUnion,
   arrayRemove,
   where,
+  limit,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';  // Ensure auth is correctly imported
 
@@ -23,13 +25,32 @@ function getCurrentUser() {
   return user;
 }
 
-// Function to add a new period with empty accounts
 async function addNewPeriod(periodName) {
   try {
-    const user = getCurrentUser();  // Ensure the user is authenticated
+    const user = getCurrentUser(); // Ensure the user is authenticated
+
+    // Fetch the most recent period for the user
+    const periodsQuery = query(
+      collection(db, 'periods'),
+      where('userId', '==', user.uid),  // Only fetch periods for the current user
+      orderBy('createdAt', 'desc'),
+      limit(1)  // We only need the most recent one
+    );
+
+    const querySnapshot = await getDocs(periodsQuery);
+    let previousPeriodData = {
+      accounts: []
+    };
+
+    if (!querySnapshot.empty) {
+      const previousPeriodDoc = querySnapshot.docs[0];
+      previousPeriodData = previousPeriodDoc.data();
+    }
+
+    // Prepare the new period data by copying the accounts from the previous period
     const periodData = {
       period: periodName,
-      accounts: [],
+      accounts: previousPeriodData.accounts,  // Copy accounts from the most recent period
       createdAt: Timestamp.now(),  // Add Firestore timestamp
       userId: user.uid,  // Associate data with the authenticated user
     };
@@ -71,6 +92,42 @@ async function fetchPeriods() {
     return [];
   }
 }
+
+// Function to fetch the last created period for the authenticated user
+async function fetchLastCreatedPeriod() {
+  try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    // Query to get the last created period for the current user
+    const periodsQuery = query(
+      collection(db, 'periods'),
+      where('userId', '==', user.uid),  // Only fetch periods for the current user
+      orderBy('createdAt', 'desc'),     // Order by creation date (most recent first)
+      limit(1)                          // Limit to the most recent one
+    );
+
+    const querySnapshot = await getDocs(periodsQuery);
+
+    if (!querySnapshot.empty) {
+      const lastCreatedPeriodDoc = querySnapshot.docs[0];
+      const periodData = lastCreatedPeriodDoc.data();
+      
+      return {
+        id: lastCreatedPeriodDoc.id,
+        period: periodData.period,
+        accounts: periodData.accounts || [],
+        createdAt: periodData.createdAt.toDate(),  // Convert Firestore timestamp to JS Date
+      };
+    } else {
+      console.log('No periods found for this user.');
+      return null;
+    }
+  } catch (e) {
+    console.error('Error fetching last created period:', e);
+    throw new Error('Failed to fetch last created period');
+  }
+}
+
 
 // Function to fetch period data by ID
 async function fetchPeriodById(periodId) {
@@ -190,4 +247,29 @@ async function updateAccountAmount(periodId, accountId, newAmount) {
   }
 }
 
-export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount };
+// Function to delete a period by ID
+async function deletePeriodById(periodId) {
+  try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    const periodRef = doc(db, 'periods', periodId);
+    const periodSnap = await getDoc(periodRef);
+
+    if (!periodSnap.exists()) {
+      throw new Error('Period not found');
+    }
+
+    const periodData = periodSnap.data();
+    if (periodData.userId !== user.uid) {
+      throw new Error('Unauthorized access to this period');
+    }
+
+    await deleteDoc(periodRef);  // Delete the period document from Firestore
+    console.log(`Period with ID ${periodId} has been deleted`);
+  } catch (e) {
+    console.error('Error deleting period:', e);
+    throw new Error('Failed to delete period');
+  }
+}
+
+export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod };

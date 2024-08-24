@@ -34,6 +34,10 @@ import { fetchPeriods } from '@/firestoreMethods';
 import { auth } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+const props = defineProps({
+    periodDeleted: Boolean,
+});
+
 const open = ref(false);
 const selectedOption = ref('Select Period');
 const options = ref<Period[]>([]);
@@ -62,10 +66,21 @@ async function loadPeriods() {
     try {
         const fetchedPeriods = await fetchPeriods();
         options.value = fetchedPeriods.length > 0 ? fetchedPeriods : [];
+        selectedOption.value = fetchedPeriods.length > 0 ? fetchedPeriods[0].period : 'Select Period';
+        if (selectedOption.value !== 'Select Period') {
+            emit('selected', fetchedPeriods[0]);
+        }
     } catch (error) {
         console.error('Error loading periods:', error);
     }
 }
+
+// Watch for periodDeleted prop change
+watch(() => props.periodDeleted, (newVal) => {
+    if (newVal) {
+        loadPeriods();
+    }
+});
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);

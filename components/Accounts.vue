@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col justify-center items-center space-y-6 min-w-[500px]">
-        <Periods @selected="fetchAccountsForPeriod" />
+        <Periods @selected="fetchAccountsForPeriod" :periodDeleted="periodDeleted" />
 
         <div class="grid grid-cols-2 gap-8 w-full">
             <!-- Account Column -->
@@ -43,6 +43,15 @@
                 </transition-group>
             </div>
         </div>
+        <div class="flex flex-row">
+            <AddPeriod />
+            <!-- delete period -->
+            <button class="btn group" @click="deletePeriod">
+                <span>Delete Period</span>
+                <SvgIcon name="trash" alt="Delete Period" :width="24" :height="24"
+                    class="group-hover:animate-spin-half" />
+            </button>
+        </div>
     </div>
 </template>
 
@@ -50,10 +59,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount } from '@/firestoreMethods';
+import { fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod } from '@/firestoreMethods';
 import Periods from './Periods.vue';
+import AddPeriod from '~/components/AddPeriod.vue';
+
 
 const selectedPeriod = ref<Period | null>(null);
+const periodDeleted = ref(false); // State to track period deletion
 
 // Fetch accounts for the selected period from Firestore
 async function fetchAccountsForPeriod(period: Period) {
@@ -62,6 +74,24 @@ async function fetchAccountsForPeriod(period: Period) {
         selectedPeriod.value = periodData;
     } catch (error) {
         console.error('Error fetching period data:', error);
+    }
+}
+
+// Delete the selected period
+async function deletePeriod() {
+    if (!selectedPeriod.value) return;
+
+    const confirmDelete = confirm('Are you sure you want to delete this period?');
+    if (confirmDelete) {
+        try {
+            await deletePeriodById(selectedPeriod.value.id);
+            periodDeleted.value = true; // Trigger periodDeleted prop in child
+        } catch (error) {
+            console.error('Error deleting period:', error);
+        } finally {
+            selectedPeriod.value = await fetchLastCreatedPeriod();
+            periodDeleted.value = false; // Reset after handling
+        }
     }
 }
 

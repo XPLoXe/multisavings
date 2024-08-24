@@ -93,6 +93,42 @@ async function fetchPeriods() {
   }
 }
 
+// Function to fetch the last created period for the authenticated user
+async function fetchLastCreatedPeriod() {
+  try {
+    const user = getCurrentUser();  // Ensure the user is authenticated
+
+    // Query to get the last created period for the current user
+    const periodsQuery = query(
+      collection(db, 'periods'),
+      where('userId', '==', user.uid),  // Only fetch periods for the current user
+      orderBy('createdAt', 'desc'),     // Order by creation date (most recent first)
+      limit(1)                          // Limit to the most recent one
+    );
+
+    const querySnapshot = await getDocs(periodsQuery);
+
+    if (!querySnapshot.empty) {
+      const lastCreatedPeriodDoc = querySnapshot.docs[0];
+      const periodData = lastCreatedPeriodDoc.data();
+      
+      return {
+        id: lastCreatedPeriodDoc.id,
+        period: periodData.period,
+        accounts: periodData.accounts || [],
+        createdAt: periodData.createdAt.toDate(),  // Convert Firestore timestamp to JS Date
+      };
+    } else {
+      console.log('No periods found for this user.');
+      return null;
+    }
+  } catch (e) {
+    console.error('Error fetching last created period:', e);
+    throw new Error('Failed to fetch last created period');
+  }
+}
+
+
 // Function to fetch period data by ID
 async function fetchPeriodById(periodId) {
   try {
@@ -236,4 +272,4 @@ async function deletePeriodById(periodId) {
   }
 }
 
-export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById };
+export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod };

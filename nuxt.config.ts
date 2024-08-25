@@ -1,5 +1,13 @@
 // nuxt.config.ts
 export default defineNuxtConfig({
+   app: {
+    head: {
+      title: 'Multisavings',
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ],
+    },
+  },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   plugins: [

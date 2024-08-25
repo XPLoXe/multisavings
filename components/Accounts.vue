@@ -25,7 +25,7 @@
 
             <!-- Balance Column -->
             <div>
-                <button class="btn group w-full flex justify-between items-center bg-black sticky-header"
+                <button class="btn group w-full py-4 flex justify-between items-center bg-black sticky-header"
                     @click="handleBalanceChange">
                     <h3 class="font-bold">Balance</h3>
                     <SvgIcon :name="balanceIcon" alt="See Percentage" :width="24" :height="24"
@@ -47,6 +47,12 @@
                 </transition-group>
             </div>
         </div>
+
+        <!-- Fixed Total Amount at the bottom -->
+        <div class="sticky-footer bg-black text-white text-xl w-full flex justify-center items-center py-4">
+            <span>Total: ${{ totalAmount }}</span>
+        </div>
+
         <div class="flex flex-row pb-10">
             <AddPeriod />
             <!-- delete period -->
@@ -59,17 +65,19 @@
     </div>
 </template>
 
-
-
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod } from '@/firestoreMethods';
 import Periods from './Periods.vue';
 import AddPeriod from '~/components/AddPeriod.vue';
 
-
 const selectedPeriod = ref<Period | null>(null);
 const periodDeleted = ref(false); // State to track period deletion
+
+// Computed property to calculate total amount
+const totalAmount = computed(() => {
+    return selectedPeriod.value?.accounts.reduce((sum, account) => sum + account.amount, 0) || 0;
+});
 
 // Fetch accounts for the selected period from Firestore
 async function fetchAccountsForPeriod(period: Period) {
@@ -174,8 +182,6 @@ async function editAmount(accountId: string) {
 function generateUniqueId(): string {
     return '_' + Math.random().toString(36).substr(2, 9);
 }
-
-
 </script>
 
 <style scoped lang="pcss">
@@ -185,11 +191,15 @@ function generateUniqueId(): string {
 
 /* Sticky header styles */
 .sticky-header {
-  @apply sticky top-0 z-10; /* Make header sticky and ensure it's above content */
+  @apply sticky -top-1 z-10; /* Make header sticky and ensure it's above content */
+}
+
+.sticky-footer {
+  @apply sticky bottom-0 z-10;
 }
 
 .scrollable-container {
-  @apply max-h-80 overflow-y-auto mt-4; /* Set max height and enable scrolling */
+  @apply md:max-h-80 max-h-72 overflow-y-auto mt-4; /* Set max height and enable scrolling */
 }
 
 /* Custom pixel art scrollbar styles */

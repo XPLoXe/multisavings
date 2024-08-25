@@ -13,8 +13,10 @@ import {
   arrayRemove,
   where,
   limit,
+  setDoc,
 } from 'firebase/firestore';
-import { db, auth } from './firebase';  // Ensure auth is correctly imported
+import { db, auth } from './firebase';
+import CryptoJS from 'crypto-js';
 
 // Helper function to get the current user
 function getCurrentUser() {
@@ -25,6 +27,71 @@ function getCurrentUser() {
   return user;
 }
 
+// Generate a 256-bit AES key
+function generateEncryptionKey() {
+  return CryptoJS.lib.WordArray.random(32).toString();
+}
+
+// Store the encryption key in the "users" collection
+async function storeEncryptionKeyForUser(userId, encryptionKey) {
+  const userRef = doc(db, 'users', userId);
+  await setDoc(userRef, { encryptionKey }, { merge: true });
+}
+
+// Retrieve the encryption key from Firestore
+async function getEncryptionKeyForUser(userId) {
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  if (userDoc.exists()) {
+    return userDoc.data().encryptionKey;
+  } else {
+    throw new Error('User does not exist or encryption key is missing');
+  }
+}
+
+// Ensure encryption key is generated and stored for the user
+async function ensureEncryptionKey(userId) {
+  const encryptionKey = await getEncryptionKeyForUser(userId).catch(async () => {
+    const newKey = generateEncryptionKey();
+    await storeEncryptionKeyForUser(userId, newKey);
+    return newKey;
+  });
+
+  return encryptionKey;
+}
+
+// Encryption and Decryption Functions Using User's Encryption Key
+async function encryptDataForUser(data, userId) {
+  const secretKey = await ensureEncryptionKey(userId);
+  return CryptoJS.AES.encrypt(data, secretKey).toString();
+}
+
+async function decryptDataForUser(encryptedData, userId) {
+  const secretKey = await ensureEncryptionKey(userId);
+  const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+  return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+// Helper Functions to Encrypt/Decrypt Account Data
+async function encryptAccounts(accounts, userId) {
+  const encryptedAccounts = await Promise.all(accounts.map(async (account) => ({
+    ...account,
+    name: await encryptDataForUser(account.name, userId),
+    amount: await encryptDataForUser(account.amount.toString(), userId),
+  })));
+  return encryptedAccounts;
+}
+
+async function decryptAccounts(accounts, userId) {
+  const decryptedAccounts = await Promise.all(accounts.map(async (account) => ({
+    ...account,
+    name: await decryptDataForUser(account.name, userId),
+    amount: parseFloat(await decryptDataForUser(account.amount, userId)),
+  })));
+  return decryptedAccounts;
+}
+
+// Function to add a new period with copied accounts (encrypted)
 async function addNewPeriod(periodName) {
   try {
     const user = getCurrentUser(); // Ensure the user is authenticated
@@ -45,12 +112,18 @@ async function addNewPeriod(periodName) {
     if (!querySnapshot.empty) {
       const previousPeriodDoc = querySnapshot.docs[0];
       previousPeriodData = previousPeriodDoc.data();
+
+      // Decrypt accounts data before copying
+      previousPeriodData.accounts = await decryptAccounts(previousPeriodData.accounts, user.uid);
     }
+
+    // Encrypt accounts data using the user's encryption key before storing them in the new period
+    const encryptedAccounts = await encryptAccounts(previousPeriodData.accounts, user.uid);
 
     // Prepare the new period data by copying the accounts from the previous period
     const periodData = {
       period: periodName,
-      accounts: previousPeriodData.accounts,  // Copy accounts from the most recent period
+      accounts: encryptedAccounts,  // Store encrypted accounts
       createdAt: Timestamp.now(),  // Add Firestore timestamp
       userId: user.uid,  // Associate data with the authenticated user
     };
@@ -63,7 +136,8 @@ async function addNewPeriod(periodName) {
   }
 }
 
-// Function to fetch all periods from Firestore, ordered by the creation timestamp
+
+// Function to fetch all periods from Firestore (decrypted)
 async function fetchPeriods() {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
@@ -76,24 +150,28 @@ async function fetchPeriods() {
     const querySnapshot = await getDocs(periodsQuery);
 
     const periods = [];
-    querySnapshot.forEach((doc) => {
+    for (const doc of querySnapshot.docs) {
       const data = doc.data();
+
+      // Decrypt accounts data
+      const decryptedAccounts = await decryptAccounts(data.accounts, user.uid);
+
       periods.push({
         id: doc.id,
         period: data.period,
-        accounts: data.accounts,
+        accounts: decryptedAccounts,
         createdAt: data.createdAt.toDate(),
       });
-    });
+    }
 
     return periods;
   } catch (e) {
-    console.error('Error fetching documents: ', e);
+    console.error('Error fetching documents:', e);
     return [];
   }
 }
 
-// Function to fetch the last created period for the authenticated user
+// Function to fetch the last created period for the authenticated user (decrypted)
 async function fetchLastCreatedPeriod() {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
@@ -111,11 +189,14 @@ async function fetchLastCreatedPeriod() {
     if (!querySnapshot.empty) {
       const lastCreatedPeriodDoc = querySnapshot.docs[0];
       const periodData = lastCreatedPeriodDoc.data();
+
+      // Decrypt accounts data
+      const decryptedAccounts = await decryptAccounts(periodData.accounts, user.uid);
       
       return {
         id: lastCreatedPeriodDoc.id,
         period: periodData.period,
-        accounts: periodData.accounts || [],
+        accounts: decryptedAccounts,
         createdAt: periodData.createdAt.toDate(),  // Convert Firestore timestamp to JS Date
       };
     } else {
@@ -128,8 +209,7 @@ async function fetchLastCreatedPeriod() {
   }
 }
 
-
-// Function to fetch period data by ID
+// Function to fetch period data by ID (decrypted)
 async function fetchPeriodById(periodId) {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
@@ -146,10 +226,13 @@ async function fetchPeriodById(periodId) {
       throw new Error('Unauthorized access to this period data');
     }
 
+    // Decrypt accounts data
+    const decryptedAccounts = await decryptAccounts(periodData.accounts, user.uid);
+
     return {
       id: periodSnap.id,
       period: periodData.period,
-      accounts: periodData.accounts || [],
+      accounts: decryptedAccounts,
       createdAt: periodData.createdAt.toDate(),
     };
   } catch (e) {
@@ -158,7 +241,7 @@ async function fetchPeriodById(periodId) {
   }
 }
 
-// Function to add an account to a specific period in Firestore
+// Function to add an account to a specific period in Firestore (encrypt data)
 async function addAccountToPeriod(periodId, account) {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
@@ -175,8 +258,11 @@ async function addAccountToPeriod(periodId, account) {
       throw new Error('Unauthorized access to this period data');
     }
 
+    // Encrypt account data before storing
+    const encryptedAccount = (await encryptAccounts([account], user.uid))[0];  // Encrypt single account
+
     await updateDoc(periodRef, {
-      accounts: arrayUnion(account),  // Use arrayUnion to add the account to the array
+      accounts: arrayUnion(encryptedAccount),  // Use arrayUnion to add the encrypted account to the array
     });
   } catch (e) {
     console.error('Error adding account to period:', e);
@@ -214,7 +300,7 @@ async function deleteAccountFromPeriod(periodId, accountId) {
   }
 }
 
-// Function to update the amount of a specific account in a specific period
+// Function to update the amount of a specific account in a specific period (encrypt data)
 async function updateAccountAmount(periodId, accountId, newAmount) {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
@@ -231,12 +317,12 @@ async function updateAccountAmount(periodId, accountId, newAmount) {
       throw new Error('Unauthorized access to this period data');
     }
 
-    const updatedAccounts = periodData.accounts.map((account) => {
+    const updatedAccounts = await Promise.all(periodData.accounts.map(async (account) => {
       if (account.id === accountId) {
-        return { ...account, amount: newAmount };
+        return { ...account, amount: await encryptDataForUser(newAmount.toString(), user.uid) };
       }
       return account;
-    });
+    }));
 
     await updateDoc(periodRef, {
       accounts: updatedAccounts,

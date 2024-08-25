@@ -19,6 +19,7 @@
     <div v-if="user" class="flex flex-col justify-center items-center space-y-4 text-lg md:text-xl w-full">
       <Accounts />
     </div>
+    <p class="text-sm mx-auto">All data is encrypted</p>
   </div>
 </template>
 

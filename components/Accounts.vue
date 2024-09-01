@@ -2,10 +2,10 @@
     <div class="flex flex-col justify-center items-center space-y-6 md:min-w-[500px]">
         <Periods @selected="fetchAccountsForPeriod" :periodDeleted="periodDeleted" />
 
-        <div class="scrollable-container custom-scrollbar grid grid-cols-2 md:gap-8 w-full">
+        <div class="grid w-full grid-cols-2 scrollable-container custom-scrollbar md:gap-8">
             <!-- Account Column -->
             <div class="w-full">
-                <button class="btn group w-full flex justify-between items-center bg-black sticky-header"
+                <button class="flex items-center justify-between w-full bg-black btn group sticky-header"
                     @click="addAccount">
                     <h3 class="font-bold">Account</h3>
                     <SvgIcon name="plus" alt="Add Account" :width="24" :height="24"
@@ -13,11 +13,11 @@
                 </button>
 
                 <div v-for="item in selectedPeriod?.accounts" :key="item.id" class="flex items-center py-2">
-                    <button class="btn group flex-shrink-0" @click="deleteAccount(item.id)">
+                    <button class="flex-shrink-0 btn group" @click="deleteAccount(item.id)">
                         <SvgIcon name="trash" alt="Delete Account" :width="24" :height="24"
                             class="group-hover:animate-spin-once" />
                     </button>
-                    <span class="ml-2 md:text-xl block whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span class="block ml-2 overflow-hidden md:text-xl whitespace-nowrap text-ellipsis">
                         {{ item.name }}
                     </span>
                 </div>
@@ -25,7 +25,7 @@
 
             <!-- Balance Column -->
             <div>
-                <button class="btn group w-full py-4 flex justify-between items-center bg-black sticky-header"
+                <button class="flex items-center justify-between w-full py-4 bg-black btn group sticky-header"
                     @click="handleBalanceChange">
                     <h3 class="font-bold">Balance</h3>
                     <SvgIcon :name="balanceIcon" alt="See Percentage" :width="24" :height="24"
@@ -34,12 +34,12 @@
 
                 <transition-group name="fade" tag="div">
                     <div v-for="item in selectedPeriod?.accounts" :key="item.id"
-                        class="flex justify-center items-center py-2">
+                        class="flex items-center justify-center py-2">
                         <div class="flex items-center space-x-2">
                             <SvgIcon name="dollar" alt="Account Balance" :width="24" :height="24" />
                             <span class="md:text-xl">{{ item.amount }}</span>
                         </div>
-                        <button class="btn group flex-shrink-0" @click="editAmount(item.id)">
+                        <button class="flex-shrink-0 btn group" @click="editAmount(item.id)">
                             <SvgIcon name="edit" alt="Edit Balance" :width="24" :height="24"
                                 class="group-hover:animate-spin-once" />
                         </button>
@@ -49,14 +49,14 @@
         </div>
 
         <!-- Fixed Total Amount at the bottom -->
-        <div class="sticky-footer bg-black text-white text-xl w-full flex justify-center items-center py-4">
+        <div class="flex items-center justify-center w-full py-4 text-xl text-white bg-black sticky-footer">
             <span>Total: ${{ totalAmount }}</span>
         </div>
 
-        <div class="flex flex-row pb-10">
+        <div class="flex flex-row pb-5">
             <AddPeriod />
             <!-- delete period -->
-            <button class="btn group items-center" @click="deletePeriod">
+            <button class="items-center btn group" @click="deletePeriod">
                 <span>Delete Period</span>
                 <SvgIcon name="trash" alt="Delete Period" :width="24" :height="24"
                     class="group-hover:animate-spin-half" />

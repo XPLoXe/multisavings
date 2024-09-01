@@ -1,27 +1,31 @@
 <template>
   <div
-    class="container bg-black mx-auto rounded-xl text-white min-h-screen flex flex-col md:max-w-3xl space-y-4 md:space-y-6 p-4 md:p-6 relative">
+    class="container relative flex flex-col min-h-screen p-4 mx-auto space-y-4 text-white bg-black rounded-xl md:max-w-3xl md:space-y-6 md:p-6">
     <!-- Login Button -->
-    <div class="absolute top-4 right-4 bg-white text-black rounded-xl px-2 py-1 z-20">
+    <div class="absolute z-20 px-2 py-1 text-black bg-white top-4 right-4 rounded-xl">
       <Login />
     </div>
 
     <!-- Title and Subtitle -->
-    <div class="flex flex-col justify-center items-center text-center">
-      <h1 class="text-2xl md:text-3xl pt-6 text-white mt-10">
+    <div class="flex flex-col items-center justify-center text-center">
+      <h1 class="pt-6 mt-10 text-2xl text-white md:text-3xl">
         <SvgIcon name="trending-up" alt="Trending Up" :width="30" :height="30" class="pt-2 md:w-9 md:h-9" />
         Multisavings
         <SvgIcon name="coffee-alt" alt="Coffee Icon" :width="30" :height="30" class="pt-2 md:w-9 md:h-9" />
       </h1>
-      <h3 class="text-white text-lg md:text-xl pt-4 md:pt-6">Manage your savings across multiple accounts</h3>
-      <h4 class="text-white text-base md:text-lg pt-2">Select a period from the dropdown below</h4>
+      <h3 class="pt-4 text-lg text-white md:text-xl md:pt-6">Manage your savings across multiple accounts</h3>
+      <h4 class="pt-2 text-base text-white md:text-lg">Select a period from the dropdown below</h4>
     </div>
 
     <!-- Accounts Component -->
-    <div v-if="user" class="flex flex-col justify-center items-center space-y-4 text-lg md:text-xl w-full">
+    <div v-if="user" class="flex flex-col items-center justify-center w-full space-y-4 text-lg md:text-xl">
       <Accounts />
     </div>
-    <p class="text-sm mx-auto">All data is encrypted</p>
+    <a href="https://github.com/XPLoXe/multisavings" target="_blank"
+      class="flex flex-row items-center justify-center p-4">
+      <p class="text-sm ">All data is encrypted</p>
+      <SvgIcon name="github" alt="github" :width="30" :height="30" class="mx-2 " />
+    </a>
   </div>
 </template>
 

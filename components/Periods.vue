@@ -11,7 +11,7 @@
 
         <transition name="fade">
             <div v-if="open && periods.length > 0"
-                class="absolute w-56 mt-2 bg-black border border-white shadow-lg top-8 rounded-xl">
+                class="absolute mt-2 bg-black border border-white shadow-lg w-72 top-8 rounded-xl">
                 <div class="py-1 overflow-scroll overflow-x-hidden max-h-64 custom-scrollbar" role="menu"
                     aria-orientation="vertical" aria-labelledby="options-menu">
                     <button v-for="(option, index) in periods" :key="index" @click="selectOption(option)"

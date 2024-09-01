@@ -8,18 +8,30 @@ import {
   addAccountToPeriod, 
   deleteAccountFromPeriod, 
   deletePeriodById,
+  getCurrentUser,
 } from '@/firestoreMethods.js';
 
 export const usePeriodStore = defineStore('periods', {
   state: () => ({
     periods: [] as Period[],
     selectedPeriod: null as Period | null,
+    userId: null as string | null,
   }),
 
   actions: {
+    async initializeStore() {
+      const user = getCurrentUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      this.userId = user.uid;
+
+      this.loadState();
+    },
     async loadState() {
-      const persistedPeriods = localStorage.getItem('periods');
-      const persistedSelectedPeriod = localStorage.getItem('selectedPeriod');
+      // Load state from local storage
+      const persistedPeriods = localStorage.getItem(`periods_${this.userId}`);
+      const persistedSelectedPeriod = localStorage.getItem(`selectedPeriod_${this.userId}`);
       
       if (persistedPeriods) {
         this.periods = JSON.parse(persistedPeriods);
@@ -27,16 +39,20 @@ export const usePeriodStore = defineStore('periods', {
       
       if (persistedSelectedPeriod) {
         this.selectedPeriod = JSON.parse(persistedSelectedPeriod);
+      } else if (this.periods.length > 0) {
+        this.selectedPeriod = this.periods[0];
       }
     },
 
     saveState() {
-      localStorage.setItem('periods', JSON.stringify(this.periods));
-      localStorage.setItem('selectedPeriod', JSON.stringify(this.selectedPeriod));
+      if (this.userId) {
+        localStorage.setItem(`periods_${this.userId}`, JSON.stringify(this.periods));
+        localStorage.setItem(`selectedPeriod_${this.userId}`, JSON.stringify(this.selectedPeriod));
+      }
     },
 
     async fetchAllPeriods() {
-      this.loadState(); // Load from local storage
+      this.initializeStore(); // Load from local storage
       try {
         if (this.periods.length === 0) {
           console.log('Fetching periods from Firestore...');
@@ -138,6 +154,17 @@ export const usePeriodStore = defineStore('periods', {
         this.saveState(); // Save to local storage
       } catch (error) {
         console.error('Error deleting period:', error);
+      }
+    },
+
+    // Clear local storage when logging out
+    clearLocalStorage() {
+      if (this.userId) {
+        localStorage.removeItem(`periods_${this.userId}`);
+        localStorage.removeItem(`selectedPeriod_${this.userId}`);
+        this.userId = null;
+        this.periods = [];
+        this.selectedPeriod = null;
       }
     },
   },

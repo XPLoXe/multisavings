@@ -1,8 +1,8 @@
 <template>
-    <div class="flex flex-col">
+    <div class="flex flex-col pointer" @click="handleLogin">
         <div class="flex flex-row items-center justify-center">
             <SvgIcon :name="loginIcon" :width="24" :height="24" class="mr-2" />
-            <button @click="handleLogin">{{ buttonText }}</button>
+            <p>{{ buttonText }}</p>
         </div>
         <p v-if="user">Welcome, {{ user.displayName }}</p>
     </div>
@@ -39,8 +39,9 @@ async function handleSignIn() {
 // Sign out
 async function handleSignOut() {
     try {
-        await signOutUser()
-        updateUI(null)
+        await signOutUser();
+        periodStore.clearLocalStorage(); // Clear local storage when signing out
+        updateUI(null);
     } catch (error) {
         console.error('Sign-out failed:', error)
     }

@@ -10,12 +10,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { usePeriodStore } from '~/stores/periods';
 import { auth, signInWithGoogle, signOutUser } from '@/firebase.js'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 
 const user = ref<User | null>(null)
 const loginIcon = ref('login')
 const buttonText = ref('Sign in with Google')
+const periodStore = usePeriodStore();
 
 // Update UI based on user authentication state
 function updateUI(currentUser: User | null) {
@@ -55,8 +57,11 @@ function handleLogin() {
 
 // Monitor auth state
 onMounted(() => {
-    onAuthStateChanged(auth, (currentUser) => {
+    onAuthStateChanged(auth, async (currentUser) => {
         updateUI(currentUser)
+        if (user.value) {
+            await periodStore.fetchAllPeriods(); // Fetch all periods after login
+        }
     });
 });
 </script>

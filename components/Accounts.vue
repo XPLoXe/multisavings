@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col justify-center items-center space-y-6 md:min-w-[500px]">
-        <Periods @selected="fetchAccountsForPeriod" :periodDeleted="periodDeleted" />
+        <Periods @selected="selectPeriod" :periodDeleted="periodDeleted" />
 
         <div class="grid w-full grid-cols-2 scrollable-container custom-scrollbar md:gap-8">
             <!-- Account Column -->
@@ -66,27 +66,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod } from '@/firestoreMethods';
+import { computed } from 'vue';
+import { usePeriodStore } from '~/stores/periods'; // Import the Pinia store
+import { storeToRefs } from 'pinia';
 import Periods from './Periods.vue';
 import AddPeriod from '~/components/AddPeriod.vue';
 
-const selectedPeriod = ref<Period | null>(null);
-const periodDeleted = ref(false); // State to track period deletion
+// Get the store and its state/actions
+const periodStore = usePeriodStore();
+const { selectedPeriod } = storeToRefs(periodStore);
+
+// State to track period deletion
+const periodDeleted = ref(false);
 
 // Computed property to calculate total amount
 const totalAmount = computed(() => {
-    return selectedPeriod.value?.accounts.reduce((sum, account) => sum + account.amount, 0) || 0;
+    return selectedPeriod?.value?.accounts.reduce((sum, account) => sum + account.amount, 0) || 0;
 });
 
-// Fetch accounts for the selected period from Firestore
-async function fetchAccountsForPeriod(period: Period) {
-    try {
-        const periodData = await fetchPeriodById(period.id);
-        selectedPeriod.value = periodData;
-    } catch (error) {
-        console.error('Error fetching period data:', error);
-    }
+// Fetch accounts for the selected period
+function selectPeriod(period: Period) {
+    periodStore.selectPeriod(period.id);
 }
 
 // Delete the selected period
@@ -96,13 +96,13 @@ async function deletePeriod() {
     const confirmDelete = confirm('Are you sure you want to delete this period?');
     if (confirmDelete) {
         try {
-            await deletePeriodById(selectedPeriod.value.id);
+            await periodStore.deletePeriod(selectedPeriod?.value.id);
             periodDeleted.value = true; // Trigger periodDeleted prop in child
         } catch (error) {
             console.error('Error deleting period:', error);
         } finally {
-            selectedPeriod.value = await fetchLastCreatedPeriod();
             periodDeleted.value = false; // Reset after handling
+            location.reload();
         }
     }
 }
@@ -125,8 +125,7 @@ async function addAccount() {
                 name: accountName,
                 amount: parseFloat(accountAmount),
             };
-            await addAccountToPeriod(selectedPeriod.value.id, newAccount);
-            selectedPeriod.value.accounts.push(newAccount);
+            await periodStore.addAccountToPeriod(selectedPeriod?.value.id, newAccount);
         } catch (error) {
             console.error('Error adding new account:', error);
         }
@@ -134,16 +133,13 @@ async function addAccount() {
         alert('Account name and amount are required.');
     }
 }
+
 // Delete an account from the selected period
 async function deleteAccount(accountId: string) {
     if (!selectedPeriod.value) return;
 
     try {
-        await deleteAccountFromPeriod(selectedPeriod.value.id, accountId);
-        // Remove the account from the local state
-        selectedPeriod.value.accounts = selectedPeriod.value.accounts.filter(
-            (account) => account.id !== accountId
-        );
+        await periodStore.deleteAccountFromPeriod(selectedPeriod?.value.id, accountId);
     } catch (error) {
         console.error('Error deleting account:', error);
     }
@@ -153,7 +149,7 @@ async function deleteAccount(accountId: string) {
 const balanceIcon = ref('dollar');
 function handleBalanceChange() {
     balanceIcon.value = balanceIcon.value === 'percent' ? 'dollar' : 'percent';
-    // TO Do: Implement the balance change logic
+    // TO DO: Implement the balance change logic
 }
 
 // Edit the amount of an existing account
@@ -164,12 +160,7 @@ async function editAmount(accountId: string) {
     if (newAmount) {
         try {
             const parsedAmount = parseFloat(newAmount);
-            await updateAccountAmount(selectedPeriod.value.id, accountId, parsedAmount);
-            // Update the local state with the new amount
-            const accountToEdit = selectedPeriod.value.accounts.find(account => account.id === accountId);
-            if (accountToEdit) {
-                accountToEdit.amount = parsedAmount;
-            }
+            await periodStore.updateAccountAmount(selectedPeriod.value.id, accountId, parsedAmount);
         } catch (error) {
             console.error('Error updating account amount:', error);
         }

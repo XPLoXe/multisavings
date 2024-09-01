@@ -23,7 +23,7 @@
     </div>
     <a href="https://github.com/XPLoXe/multisavings" target="_blank"
       class="flex flex-row items-center justify-center p-4">
-      <p class="text-sm ">All data is encrypted</p>
+      <p class="text-sm ">All cloud stored data is encrypted</p>
       <SvgIcon name="github" alt="github" :width="30" :height="30" class="mx-2 " />
     </a>
   </div>

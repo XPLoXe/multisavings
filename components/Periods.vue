@@ -10,11 +10,11 @@
         </div>
 
         <transition name="fade">
-            <div v-if="open && options.length > 0"
+            <div v-if="open && periods.length > 0"
                 class="absolute w-56 mt-2 bg-black border border-white shadow-lg top-8 rounded-xl">
                 <div class="py-1 overflow-scroll overflow-x-hidden max-h-64 custom-scrollbar" role="menu"
                     aria-orientation="vertical" aria-labelledby="options-menu">
-                    <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
+                    <button v-for="(option, index) in periods" :key="index" @click="selectOption(option)"
                         class="w-full btn items group">
                         <img src="../assets/img/cursor-hover-right.png"
                             class="finger finger-right group-hover:opacity-100" />
@@ -29,19 +29,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
-import { fetchPeriods } from '@/firestoreMethods';
-import { auth } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { ref, onMounted, onUnmounted, defineEmits, watch } from 'vue';
+import { usePeriodStore } from '~/stores/periods';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps({
     periodDeleted: Boolean,
 });
 
+const periodStore = usePeriodStore();
+const { periods, selectedPeriod } = storeToRefs(periodStore);
+
 const open = ref(false);
 const selectedOption = ref('Select Period');
-const options = ref<Period[]>([]);
-
 const dropdown = ref(null);
 
 const emit = defineEmits(['selected']);
@@ -52,6 +52,7 @@ function toggleDropdown() {
 
 function selectOption(option: Period) {
     selectedOption.value = option.period;
+    periodStore.selectPeriod(option.id);
     open.value = false;
     emit('selected', option);
 }
@@ -64,11 +65,10 @@ function handleClickOutside(event: MouseEvent) {
 
 async function loadPeriods() {
     try {
-        const fetchedPeriods = await fetchPeriods();
-        options.value = fetchedPeriods.length > 0 ? fetchedPeriods : [];
-        selectedOption.value = fetchedPeriods.length > 0 ? fetchedPeriods[0].period : 'Select Period';
+        await periodStore.fetchAllPeriods();
+        selectedOption.value = periods.value.length > 0 ? periods.value[0].period : 'Select Period';
         if (selectedOption.value !== 'Select Period') {
-            emit('selected', fetchedPeriods[0]);
+            emit('selected', periods.value[0]);
         }
     } catch (error) {
         console.error('Error loading periods:', error);
@@ -84,29 +84,13 @@ watch(() => props.periodDeleted, (newVal) => {
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
-
-    // Check if auth is not null before passing it to onAuthStateChanged
-    if (auth) {
-        // Listen for authentication state changes
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is authenticated, now load the periods
-                loadPeriods();
-            } else {
-                console.error('User is not authenticated');
-            }
-        });
-    } else {
-        console.error('Auth object is null');
-    }
-
+    loadPeriods(); // Load periods on mount
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
 });
 </script>
-
 
 <style lang="pcss">
 .dropdown-container {
@@ -160,6 +144,4 @@ onUnmounted(() => {
 .fade-enter-to, .fade-leave {
     opacity: 1;
 }
-
-
 </style>

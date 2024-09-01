@@ -1,19 +1,23 @@
+import { createPinia } from 'pinia'
 // nuxt.config.ts
 export default defineNuxtConfig({
-   app: {
-    head: {
-      title: 'Multisavings',
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-      ],
-    },
-  },
+  app: {
+   head: {
+     title: 'Multisavings',
+     link: [
+       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+     ],
+   },
+ },
+
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+
   plugins: [
     '@/plugins/fontawesome.js',
     '@/plugins/global-components.js',
   ],
+
   vite: {
     optimizeDeps: {
       include: [
@@ -23,16 +27,19 @@ export default defineNuxtConfig({
       ],
     },
   },
+
   css: [
     '@/assets/css/input.css',
     '@/assets/css/fonts.css',
   ],
+
   postcss: {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
   },
+
   runtimeConfig: {
     public: {
       firebaseApiKey: process.env.FIREBASE_API_KEY,
@@ -43,5 +50,11 @@ export default defineNuxtConfig({
       firebaseAppId: process.env.FIREBASE_APP_ID,
       firebaseMeasurementId: process.env.FIREBASE_MEASUREMENT_ID,
     },
+  },
+
+  modules: ['@pinia/nuxt'],
+
+   pinia: {
+    autoImports: ['defineStore', 'storeToRefs'], // automatically import `defineStore`
   },
 });

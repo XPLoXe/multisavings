@@ -7,27 +7,31 @@
     </div>
 </template>
 
-<script setup>
-import { addNewPeriod } from '@/firestoreMethods'
+<script setup lang="ts">
+import { usePeriodStore } from '~/stores/periods'; // Import the Pinia store
+
+const periodStore = usePeriodStore(); // Use the Pinia store
 
 const addPeriod = async () => {
     try {
-        const newPeriodName = prompt("Enter the period name:")
+        const newPeriodName = prompt("Enter the period name:");
         if (!newPeriodName) {
-            alert("Period name cannot be empty.")
-            return
+            alert("Period name cannot be empty.");
+            return;
         }
         if (newPeriodName.length > 10) {
-            alert("Period name cannot be longer than 10 characters.")
-            return
+            alert("Period name cannot be longer than 10 characters.");
+            return;
         }
-        const newPeriodId = await addNewPeriod(newPeriodName)
-        console.log('New period added with ID:', newPeriodId)
+
+        await periodStore.createPeriod(newPeriodName);
+        console.log('New period added successfully');
     } catch (error) {
-        console.error(error)
-        alert('Failed to add period. Please try again.')
+        console.error(error);
+        alert('Failed to add period. Please try again.');
+    } finally {
+        location.reload();
     }
-    location.reload()
 };
 </script>
 

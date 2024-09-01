@@ -59,7 +59,7 @@
             <button class="items-center btn group" @click="deletePeriod">
                 <span>Delete Period</span>
                 <SvgIcon name="trash" alt="Delete Period" :width="24" :height="24"
-                    class="group-hover:animate-spin-half" />
+                    class="group-hover:animate-spin-once" />
             </button>
         </div>
     </div>

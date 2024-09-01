@@ -14,7 +14,9 @@
         <SvgIcon name="coffee-alt" alt="Coffee Icon" :width="30" :height="30" class="pt-2 md:w-9 md:h-9" />
       </h1>
       <h3 class="pt-4 text-lg text-white md:text-xl md:pt-6">Manage your savings across multiple accounts</h3>
-      <h4 class="pt-2 text-base text-white md:text-lg">Select a period from the dropdown below</h4>
+      <h4 class="pt-2 text-base text-white md:text-lg">
+        {{ user ? 'Select a period from the dropdown below' : 'Please login to start managing your accounts' }}
+      </h4>
     </div>
 
     <!-- Accounts Component -->

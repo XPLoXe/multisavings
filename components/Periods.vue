@@ -1,8 +1,8 @@
 <template>
-    <div ref="dropdown" class="dropdown-container pointer relative inline-block text-left">
+    <div ref="dropdown" class="relative inline-block text-left dropdown-container pointer">
         <div>
             <button @click="toggleDropdown"
-                class="btn group border-gray-300 shadow-sm bg-black font-medium focus:outline-none">
+                class="font-medium bg-black border-gray-300 shadow-sm btn group focus:outline-none">
                 {{ selectedOption }}
                 <SvgIcon name="chevron-down" alt="chevron-down" class="ml-4 group-focus:animate-spin-half"
                     :isHoverable="true" :width="28" :height="28" />
@@ -11,11 +11,11 @@
 
         <transition name="fade">
             <div v-if="open && options.length > 0"
-                class="absolute top-8 mt-2 w-56 rounded-xl border border-white shadow-lg bg-black">
-                <div class="py-1 overflow-scroll max-h-64 overflow-x-hidden custom-scrollbar" role="menu"
+                class="absolute w-56 mt-2 bg-black border border-white shadow-lg top-8 rounded-xl">
+                <div class="py-1 overflow-scroll overflow-x-hidden max-h-64 custom-scrollbar" role="menu"
                     aria-orientation="vertical" aria-labelledby="options-menu">
                     <button v-for="(option, index) in options" :key="index" @click="selectOption(option)"
-                        class="btn w-full items group">
+                        class="w-full btn items group">
                         <img src="../assets/img/cursor-hover-right.png"
                             class="finger finger-right group-hover:opacity-100" />
                         {{ option.period }}

@@ -9,54 +9,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { auth, signInWithGoogle, signOutUser } from '@/firebase.js';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { ref, onMounted } from 'vue'
+import { auth, signInWithGoogle, signOutUser } from '@/firebase.js'
+import { onAuthStateChanged, type User } from 'firebase/auth'
 
-const user = ref<User | null>(null);
-const loginIcon = ref('login');
-const buttonText = ref('Sign in with Google');
+const user = ref<User | null>(null)
+const loginIcon = ref('login')
+const buttonText = ref('Sign in with Google')
 
 // Update UI based on user authentication state
 function updateUI(currentUser: User | null) {
     user.value = currentUser;
-    loginIcon.value = currentUser ? 'logout' : 'login';
-    buttonText.value = currentUser ? 'Sign out' : 'Sign in with Google';
+    loginIcon.value = currentUser ? 'logout' : 'login'
+    buttonText.value = currentUser ? 'Sign out' : 'Sign in with Google'
 }
 
 // Sign in with Google
 async function handleSignIn() {
     try {
-        const currentUser = await signInWithGoogle();
-        updateUI(currentUser);
+        const currentUser = await signInWithGoogle()
+        updateUI(currentUser)
     } catch (error) {
-        console.error('Google sign-in failed:', error);
+        console.error('Google sign-in failed:', error)
     }
 }
 
 // Sign out
 async function handleSignOut() {
     try {
-        await signOutUser();
-        updateUI(null);
+        await signOutUser()
+        updateUI(null)
     } catch (error) {
-        console.error('Sign-out failed:', error);
+        console.error('Sign-out failed:', error)
     }
 }
 
 // Handle login
 function handleLogin() {
     if (user.value) {
-        handleSignOut();
+        handleSignOut()
     } else {
-        handleSignIn();
+        handleSignIn()
     }
 }
 
 // Monitor auth state
 onMounted(() => {
     onAuthStateChanged(auth, (currentUser) => {
-        updateUI(currentUser);
+        updateUI(currentUser)
     });
 });
 </script>

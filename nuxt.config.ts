@@ -3,7 +3,10 @@ import { createPinia } from 'pinia'
 export default defineNuxtConfig({
   app: {
    head: {
-     title: 'Multisavings',
+     title: 'Multisavings: Manage Your Savings',
+      meta: [
+        { name: 'description', content: 'Multisavings is a web application that allows users to manage and track their savings across various accounts securely. With built-in encryption, your financial data is stored safely in the cloud, ensuring privacy and security. Ideal for individuals who want a simple and effective way to monitor their savings.' },
+      ],
      link: [
        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
      ],

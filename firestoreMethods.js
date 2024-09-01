@@ -128,13 +128,22 @@ async function addNewPeriod(periodName) {
       userId: user.uid,  // Associate data with the authenticated user
     };
 
+    // Add the period data to Firestore
     const docRef = await addDoc(collection(db, 'periods'), periodData);
-    return docRef.id;
+
+    // Return the entire period object including the ID, but with decrypted accounts for local use
+    return {
+      id: docRef.id,
+      period: periodName,
+      accounts: previousPeriodData.accounts,  // Return decrypted accounts
+      createdAt: periodData.createdAt.toDate() // Convert Firestore timestamp to JS Date
+    };
   } catch (e) {
     console.error('Error adding document: ', e);
     throw new Error('Failed to add period');
   }
 }
+
 
 
 // Function to fetch all periods from Firestore (decrypted)
@@ -352,10 +361,18 @@ async function deletePeriodById(periodId) {
 
     await deleteDoc(periodRef);  // Delete the period document from Firestore
     console.log(`Period with ID ${periodId} has been deleted`);
+
+    // Return the deleted period object including the ID
+    return {
+      id: periodId,
+      ...periodData,
+      createdAt: periodData.createdAt.toDate() // Convert Firestore timestamp to JS Date
+    };
   } catch (e) {
     console.error('Error deleting period:', e);
     throw new Error('Failed to delete period');
   }
 }
 
-export { addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod };
+
+export { getCurrentUser, addNewPeriod, fetchPeriods, fetchPeriodById, addAccountToPeriod, deleteAccountFromPeriod, updateAccountAmount, deletePeriodById, fetchLastCreatedPeriod };

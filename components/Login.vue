@@ -1,8 +1,8 @@
 <template>
-    <div class="flex flex-col">
+    <div class="flex flex-col pointer" @click="handleLogin">
         <div class="flex flex-row items-center justify-center">
             <SvgIcon :name="loginIcon" :width="24" :height="24" class="mr-2" />
-            <button @click="handleLogin">{{ buttonText }}</button>
+            <p>{{ buttonText }}</p>
         </div>
         <p v-if="user">Welcome, {{ user.displayName }}</p>
     </div>
@@ -10,12 +10,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { usePeriodStore } from '~/stores/periods';
 import { auth, signInWithGoogle, signOutUser } from '@/firebase.js'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 
 const user = ref<User | null>(null)
 const loginIcon = ref('login')
 const buttonText = ref('Sign in with Google')
+const periodStore = usePeriodStore();
 
 // Update UI based on user authentication state
 function updateUI(currentUser: User | null) {
@@ -37,8 +39,9 @@ async function handleSignIn() {
 // Sign out
 async function handleSignOut() {
     try {
-        await signOutUser()
-        updateUI(null)
+        await signOutUser();
+        periodStore.clearLocalStorage(); // Clear local storage when signing out
+        updateUI(null);
     } catch (error) {
         console.error('Sign-out failed:', error)
     }
@@ -55,8 +58,11 @@ function handleLogin() {
 
 // Monitor auth state
 onMounted(() => {
-    onAuthStateChanged(auth, (currentUser) => {
+    onAuthStateChanged(auth, async (currentUser) => {
         updateUI(currentUser)
+        if (user.value) {
+            await periodStore.fetchAllPeriods(); // Fetch all periods after login
+        }
     });
 });
 </script>

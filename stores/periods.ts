@@ -95,46 +95,52 @@ export const usePeriodStore = defineStore('periods', {
       }
     },
 
-    async updateAccountAmount(periodId: string, accountId: string, newAmount: number) {
-      try {
-        // Retrieve the period from the store
-        const period = this.periods.find(p => p.id === periodId);
-        if (!period) {
-          console.error(`Period with ID ${periodId} not found.`);
-          return;
-        }
-
-        // Find the account in the period to update
-        const account = period.accounts.find(a => a.id === accountId);
-        if (!account) {
-          console.error(`Account with ID ${accountId} not found in period ${periodId}.`);
-          return;
-        }
-
-        // Calculate the new percentage based on `baseValue`
-        const baseValue = account.baseValue || account.amount; // Default to current amount if baseValue is undefined
-        const newPercentage = ((newAmount - baseValue) / Math.abs(baseValue)) * 100;
-
-        // Update the local store with the new amount and percentage
-        account.amount = newAmount;
-        account.percentage = newPercentage;
-
-        // Save the changes to Firestore and get the updated list of accounts
-        const updatedAccounts = await updateAccountAmount(periodId, accountId, newAmount, newPercentage);
-
-        // Update the period in the local store with the returned accounts
-        period.accounts = updatedAccounts;
-
-        // Update the selected period if applicable
-        if (this.selectedPeriod && this.selectedPeriod.id === periodId) {
-          this.selectedPeriod.accounts = updatedAccounts;
-        }
-
-        this.saveState(); // Save the updated state to local storage
-      } catch (error) {
-        console.error('Error updating account amount:', error);
+  async updateAccountAmount(periodId: string, accountId: string, newAmount: number) {
+    try {
+      // Retrieve the period from the store
+      const period = this.periods.find(p => p.id === periodId);
+      if (!period) {
+        console.error(`Period with ID ${periodId} not found.`);
+        return;
       }
-    },
+
+      // Find the account in the period to update
+      const account = period.accounts.find(a => a.id === accountId);
+      if (!account) {
+        console.error(`Account with ID ${accountId} not found in period ${periodId}.`);
+        return;
+      }
+
+      // If the percentage is `null`, it means the account was newly added in the current period
+      // Keep the percentage as `null` to indicate no comparison with previous periods
+      let newPercentage: number | null = null;
+
+      if (account.percentage !== null) {
+        // Calculate the new percentage based on `baseValue` only if the account is not new
+        const baseValue = account.baseValue || account.amount; // Default to current amount if baseValue is undefined
+        newPercentage = ((newAmount - baseValue) / Math.abs(baseValue)) * 100;
+      }
+
+      // Update the local store with the new amount and percentage
+      account.amount = newAmount;
+      account.percentage = newPercentage;
+
+      // Save the changes to Firestore and get the updated list of accounts
+      const updatedAccounts = await updateAccountAmount(periodId, accountId, newAmount, newPercentage);
+
+      // Update the period in the local store with the returned accounts
+      period.accounts = updatedAccounts;
+
+      // Update the selected period if applicable
+      if (this.selectedPeriod && this.selectedPeriod.id === periodId) {
+        this.selectedPeriod.accounts = updatedAccounts;
+      }
+
+      this.saveState(); // Save the updated state to local storage
+    } catch (error) {
+      console.error('Error updating account amount:', error);
+    }
+  },
 
     async addAccountToPeriod(periodId: string, account: Account) {
       try {

@@ -100,15 +100,16 @@ const totalPercentage = computed(() => {
     // Calculate the current total amount
     const currentTotal = selectedPeriod.value.accounts.reduce((sum, account) => sum + account.amount, 0);
 
-    // Calculate the sum of all original amounts using `baseValue`
+    // Calculate the sum of all original amounts using `baseValue`, ignoring newly added accounts
     const previousTotal = selectedPeriod.value.accounts.reduce((sum, account) => {
-        // If `baseValue` is missing, fallback to the current amount (initial state)
+        // If `percentage` is `null`, it means the account was newly added in the current period
+        if (account.percentage === null) return sum;
         const baseValue = account.baseValue ?? account.amount;
         return sum + baseValue;
     }, 0);
 
-    // Calculate the total percentage change
-    return previousTotal !== 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : 0;
+    // Calculate the total percentage change using absolute value of previous total
+    return previousTotal !== 0 ? ((currentTotal - previousTotal) / Math.abs(previousTotal)) * 100 : 0;
 });
 
 

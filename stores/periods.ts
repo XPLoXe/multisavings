@@ -97,18 +97,52 @@ export const usePeriodStore = defineStore('periods', {
 
     async updateAccountAmount(periodId: string, accountId: string, newAmount: number) {
       try {
-        await updateAccountAmount(periodId, accountId, newAmount);
+        // Retrieve the period from the store
         const period = this.periods.find(p => p.id === periodId);
-        if (period) {
-          const account = period.accounts.find(a => a.id === accountId);
-          if (account) {
-            account.amount = newAmount;
-          }
-          this.selectedPeriod = period;
-          this.saveState(); // Save to local storage
-        } else {
-          await this.selectPeriod(periodId); // Refresh the selected period from Firestore
+        if (!period) {
+          console.error(`Period with ID ${periodId} not found.`);
+          return;
         }
+
+        // Find the account in the period to update
+        const account = period.accounts.find(a => a.id === accountId);
+        if (!account) {
+          console.error(`Account with ID ${accountId} not found in period ${periodId}.`);
+          return;
+        }
+
+        // Calculate the previous value and update the percentage based on current values
+        let originalValue;
+        if (account.percentage === 0) {
+          originalValue = account.amount;  // If 0%, the previous value is the same
+        } else {
+          if (account.percentage === null) {
+            originalValue = account.amount;
+          } else {
+            // If the percentageage is not zero, calculate the original value using reverse formula
+            originalValue = account.amount / (1 + account.percentage / 100);
+          }
+        }
+
+        // Calculate the new percentageage
+        const newPercentage = ((newAmount - originalValue) / originalValue) * 100;
+
+        // Update the local store with the new amount and percentage
+        account.amount = newAmount;
+        account.percentage = newPercentage;
+
+        // Save the changes to Firestore and get the updated list of accounts
+        const updatedAccounts = await updateAccountAmount(periodId, accountId, newAmount, newPercentage);
+
+        // Update the period in the local store with the returned accounts
+        period.accounts = updatedAccounts;
+
+        // Update the selected period if applicable
+        if (this.selectedPeriod && this.selectedPeriod.id === periodId) {
+          this.selectedPeriod.accounts = updatedAccounts;
+        }
+
+        this.saveState(); // Save the updated state to local storage
       } catch (error) {
         console.error('Error updating account amount:', error);
       }

@@ -4,6 +4,7 @@ declare global {
     id: string;
     name: string;
     amount: number;
+    percentage: number | null;
   }
 
   interface Period {

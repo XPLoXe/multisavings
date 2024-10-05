@@ -36,8 +36,10 @@
                     <div v-for="item in selectedPeriod?.accounts" :key="item.id"
                         class="flex items-center justify-center py-2">
                         <div class="flex items-center space-x-2">
-                            <SvgIcon name="dollar" alt="Account Balance" :width="24" :height="24" />
-                            <span class="md:text-xl">{{ item.amount }}</span>
+                            <SvgIcon :name="balanceIcon" alt="Account Balance" :width="24" :height="24" />
+                            <span class="md:text-xl">{{ balanceIcon === 'dollar' ? item.amount :
+                                formatPercentage(item.percentage)
+                                }}</span>
                         </div>
                         <button class="flex-shrink-0 btn group" @click="editAmount(item.id)">
                             <SvgIcon name="edit" alt="Edit Balance" :width="24" :height="24"
@@ -50,7 +52,9 @@
 
         <!-- Fixed Total Amount at the bottom -->
         <div class="flex items-center justify-center w-full py-4 text-xl text-white bg-black sticky-footer">
-            <span>Total: ${{ totalAmount }}</span>
+            <span class="pr-2">Total: </span>
+            <SvgIcon :name="balanceIcon" alt="Account Balance" :width="24" :height="24" />
+            <span>{{ balanceIcon === 'dollar' ? totalAmount : formatPercentage(totalPercentage) }}</span>
         </div>
 
         <div class="flex flex-row pb-5">
@@ -83,6 +87,31 @@ const periodDeleted = ref(false);
 const totalAmount = computed(() => {
     return selectedPeriod?.value?.accounts.reduce((sum, account) => sum + account.amount, 0) || 0;
 });
+
+function formatPercentage(value: number | undefined | null): string {
+    if (value === undefined || value === null || isNaN(value)) return '-';
+    return `${value.toFixed(2)}%`;
+}
+
+// Computed property to calculate the total percentage change
+const totalPercentage = computed(() => {
+    if (!selectedPeriod.value || selectedPeriod.value.accounts.length === 0) return 0;
+
+    // Calculate the current total amount
+    const currentTotal = selectedPeriod.value.accounts.reduce((sum, account) => sum + account.amount, 0);
+
+    // Calculate the sum of all previous amounts
+    const previousTotal = selectedPeriod.value.accounts.reduce((sum, account) => {
+        // Determine previous amount using the formula: amount / (1 + percent / 100)
+        if (account.percentage === null) return sum;
+        const previousAmount = account.amount / (1 + account.percentage / 100);
+        return sum + previousAmount;
+    }, 0);
+
+    // Calculate the total percentage change
+    return previousTotal !== 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : 0;
+});
+
 
 // Fetch accounts for the selected period
 function selectPeriod(period: Period) {
@@ -124,6 +153,7 @@ async function addAccount() {
                 id: generateUniqueId(),
                 name: accountName,
                 amount: parseFloat(accountAmount),
+                percentage: null,
             };
             await periodStore.addAccountToPeriod(selectedPeriod?.value.id, newAccount);
         } catch (error) {
@@ -149,7 +179,6 @@ async function deleteAccount(accountId: string) {
 const balanceIcon = ref('dollar');
 function handleBalanceChange() {
     balanceIcon.value = balanceIcon.value === 'percent' ? 'dollar' : 'percent';
-    // TO DO: Implement the balance change logic
 }
 
 // Edit the amount of an existing account

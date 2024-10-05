@@ -4,6 +4,8 @@ declare global {
     id: string;
     name: string;
     amount: number;
+    percentage: number | null;
+    baseValue: number;   // The original amount used as the baseline
   }
 
   interface Period {

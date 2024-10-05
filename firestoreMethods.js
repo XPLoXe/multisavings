@@ -115,6 +115,14 @@ async function addNewPeriod(periodName) {
 
       // Decrypt accounts data before copying
       previousPeriodData.accounts = await decryptAccounts(previousPeriodData.accounts, user.uid);
+      // map all the accounts percentage field to 0 and set the base value
+      previousPeriodData.accounts = previousPeriodData.accounts.map(account => {
+        return {
+          ...account,
+          baseValue: account.amount,
+          percentage: 0
+        };
+      });
     }
 
     // Encrypt accounts data using the user's encryption key before storing them in the new period
@@ -143,8 +151,6 @@ async function addNewPeriod(periodName) {
     throw new Error('Failed to add period');
   }
 }
-
-
 
 // Function to fetch all periods from Firestore (decrypted)
 async function fetchPeriods() {
@@ -309,8 +315,8 @@ async function deleteAccountFromPeriod(periodId, accountId) {
   }
 }
 
-// Function to update the amount of a specific account in a specific period (encrypt data)
-async function updateAccountAmount(periodId, accountId, newAmount) {
+// Function to update the amount and percentage of a specific account in a specific period
+async function updateAccountAmount(periodId, accountId, newAmount, newPercentage) {
   try {
     const user = getCurrentUser();  // Ensure the user is authenticated
 
@@ -326,16 +332,23 @@ async function updateAccountAmount(periodId, accountId, newAmount) {
       throw new Error('Unauthorized access to this period data');
     }
 
+    // Update the amount and percentage in the accounts list
     const updatedAccounts = await Promise.all(periodData.accounts.map(async (account) => {
       if (account.id === accountId) {
-        return { ...account, amount: await encryptDataForUser(newAmount.toString(), user.uid) };
+        // Encrypt new amount
+        const encryptedAmount = await encryptDataForUser(newAmount.toString(), user.uid);
+        // Return updated account with new amount and percentage
+        return { ...account, amount: encryptedAmount, percentage: newPercentage };
       }
       return account;
     }));
 
-    await updateDoc(periodRef, {
-      accounts: updatedAccounts,
-    });
+    // Save the updated accounts to Firestore
+    await updateDoc(periodRef, { accounts: updatedAccounts });
+
+    // Return decrypted accounts for local use
+    const decryptedAccounts = await decryptAccounts(updatedAccounts, user.uid);
+    return decryptedAccounts;
   } catch (e) {
     console.error('Error updating account amount:', e);
     throw new Error('Failed to update account amount');

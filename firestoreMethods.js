@@ -115,10 +115,11 @@ async function addNewPeriod(periodName) {
 
       // Decrypt accounts data before copying
       previousPeriodData.accounts = await decryptAccounts(previousPeriodData.accounts, user.uid);
-      // map all the accounts percentage field to 0
+      // map all the accounts percentage field to 0 and set the base value
       previousPeriodData.accounts = previousPeriodData.accounts.map(account => {
         return {
           ...account,
+          baseValue: account.amount,
           percentage: 0
         };
       });

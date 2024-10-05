@@ -111,25 +111,10 @@ export const usePeriodStore = defineStore('periods', {
           return;
         }
 
-        // Calculate the previous value and update the percentage based on current values
-        let originalValue;
-        let newPercentage = null
+        // Calculate the new percentage based on `baseValue`
+        const baseValue = account.baseValue || account.amount; // Default to current amount if baseValue is undefined
+        const newPercentage = ((newAmount - baseValue) / Math.abs(baseValue)) * 100;
 
-        if (account.percentage !== null) {
-          if (account.percentage === 0) {
-            originalValue = account.amount;  // If 0%, the previous value is the same
-          } else {
-              // If the percentageage is not zero, calculate the original value using reverse formula
-              originalValue = account.amount / (1 + account.percentage / 100);
-          }
-
-          // Calculate the new percentageage
-          newPercentage = ((newAmount - originalValue) / originalValue) * 100;
-        } else {
-          originalValue = account.amount;
-        }
-        
-        
         // Update the local store with the new amount and percentage
         account.amount = newAmount;
         account.percentage = newPercentage;

@@ -100,12 +100,11 @@ const totalPercentage = computed(() => {
     // Calculate the current total amount
     const currentTotal = selectedPeriod.value.accounts.reduce((sum, account) => sum + account.amount, 0);
 
-    // Calculate the sum of all previous amounts
+    // Calculate the sum of all original amounts using `baseValue`
     const previousTotal = selectedPeriod.value.accounts.reduce((sum, account) => {
-        // Determine previous amount using the formula: amount / (1 + percent / 100)
-        if (account.percentage === null) return sum;
-        const previousAmount = account.amount / (1 + account.percentage / 100);
-        return sum + previousAmount;
+        // If `baseValue` is missing, fallback to the current amount (initial state)
+        const baseValue = account.baseValue ?? account.amount;
+        return sum + baseValue;
     }, 0);
 
     // Calculate the total percentage change
@@ -154,6 +153,7 @@ async function addAccount() {
                 name: accountName,
                 amount: parseFloat(accountAmount),
                 percentage: null,
+                baseValue: parseFloat(accountAmount)
             };
             await periodStore.addAccountToPeriod(selectedPeriod?.value.id, newAccount);
         } catch (error) {
